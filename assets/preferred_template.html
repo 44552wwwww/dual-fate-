@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>命运双鉴 · 八字 × 紫微斗数</title>
+<style>
+:root {
+  --bg:#0f0f14; --card:#1a1a24; --card2:#222232; --text:#d4d4dc;
+  --gold:#c9a96e; --purple:#8b5cf6; --red:#e85d75; --blue:#60a5fa;
+  --green:#4ade80; --border:#2a2a3a;
+  --wx-wood:#4ade80; --wx-fire:#f97316; --wx-earth:#a78b5a;
+  --wx-metal:#e2e8a0; --wx-water:#38bdf8;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI','Noto Sans SC','Microsoft YaHei',sans-serif;
+  line-height: 1.7; min-height:100vh; overflow-x:hidden;
+}
+
+/* NAV */
+.top-nav { display:flex; background:#12121a; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.nav-btn {
+  flex:1; padding:14px 8px; background:transparent; border:none; color:#666;
+  cursor:pointer; font-size:0.95em; transition:all .3s;
+  border-bottom:2px solid transparent; font-family:inherit; text-align:center;
+}
+.nav-btn:hover { color:#aaa; }
+.nav-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+.nav-btn .sub { font-size:0.65em; display:block; color:#555; }
+.nav-btn.active .sub { color:var(--gold); }
+.section-panel { display:none; }
+.section-panel.active { display:block; }
+
+/* COMBINED SUMMARY */
+.combined-wrap { max-width:1200px; margin:0 auto; padding:20px 16px; }
+.combined-header {
+  text-align:center; padding:30px 16px;
+  background:linear-gradient(135deg, rgba(201,169,110,0.08), rgba(139,92,246,0.08));
+  border-radius:16px; margin-bottom:24px;
+}
+.combined-header h1 {
+  font-size:1.8em;
+  background:linear-gradient(135deg, var(--gold), var(--purple));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:6px;
+}
+.combined-header .subtitle { color:#888; font-size:0.85em; }
+.xref-table { width:100%; border-collapse:collapse; margin-bottom:24px; border-radius:12px; overflow:hidden; font-size:0.8em; }
+.xref-table th { background:#2F5496; color:#fff; padding:10px 8px; font-size:0.8em; text-align:center; }
+.xref-table td { background:var(--card); padding:10px 8px; border:1px solid var(--border); vertical-align:top; line-height:1.6; }
+.xref-table tr td:first-child { font-weight:700; color:var(--gold); text-align:center; width:50px; }
+.agree { color:var(--green); font-weight:600; } .conflict { color:var(--red); font-weight:600; } .unique { color:var(--blue); font-weight:600; }
+.verdict-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px; margin-bottom:24px; }
+.verdict-card {
+  background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px;
+}
+.verdict-card h3 { font-size:1.1em; margin-bottom:10px; }
+.verdict-card .big-text { font-size:1.5em; font-weight:700; margin:6px 0; }
+.text-good { color:var(--green); } .text-warn { color:var(--red); } .text-ok { color:var(--gold); }
+.verdict-card .detail { color:#999; font-size:0.82em; line-height:1.7; }
+.verdict-card .detail em { color:#ddd; font-style:normal; font-weight:600; }
+.verdict-card .source { font-size:0.7em; color:#555; margin-top:10px; padding-top:8px; border-top:1px solid var(--border); }
+.actions {
+  background:linear-gradient(135deg, rgba(201,169,110,0.06), rgba(139,92,246,0.06));
+  border:1px solid var(--border); border-radius:12px; padding:24px;
+}
+.actions h3 { margin-bottom:12px; }
+.action-list { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; }
+.action-item {
+  background:var(--card); border-radius:10px; padding:14px;
+  border-left:3px solid var(--gold); font-size:0.85em;
+}
+.action-item .num { color:var(--gold); font-weight:700; margin-right:6px; }
+.action-item em { color:#ddd; font-style:normal; }
+
+/* Hide individual report scripts/headers within iframe-replacement divs */
+.embedded-report { overflow:auto; max-height:calc(100vh - 70px); }
+.embedded-report .header { display:none; }
+.embedded-report .guide-toggle, .embedded-report .guide-overlay, .embedded-report .guide-panel { display:none !important; }
+
+@media (max-width:768px) {
+  .nav-btn { padding:10px 6px; font-size:0.8em; }
+  .verdict-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <button class="nav-btn active" onclick="switchPanel('bazi')">八字<span class="sub">子平术</span></button>
+  <button class="nav-btn" onclick="switchPanel('ziwei')">紫微<span class="sub">星盘</span></button>
+  <button class="nav-btn" onclick="switchPanel('combined')">双鉴<span class="sub">总结</span></button>
+</div>
+
+<div id="panel-bazi" class="section-panel active">
+  <iframe sandbox="allow-scripts allow-same-origin" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;title&gt;八字命盘 - 子平术分析&lt;/title&gt;
+&lt;style&gt;
+:root {
+  --bg: #0f0f14; --card: #1a1a24; --card2: #222232; --text: #d4d4dc;
+  --gold: #c9a96e; --purple: #8b5cf6; --red: #e85d75; --blue: #60a5fa;
+  --green: #4ade80; --border: #2a2a3a;
+  --wx-wood: #4ade80; --wx-fire: #f97316; --wx-earth: #a78b5a;
+  --wx-metal: #e2e8a0; --wx-water: #38bdf8;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: &#x27;Segoe UI&#x27;,&#x27;Noto Sans SC&#x27;,&#x27;Microsoft YaHei&#x27;,sans-serif;
+  line-height: 1.7; min-height: 100vh;
+}
+
+/* ====== HEADER ====== */
+.header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f14 100%);
+  padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border);
+}
+.header h1 {
+  font-size: 2.4em;
+  background: linear-gradient(135deg, var(--gold), #e2c98a);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+.header .subtitle { color: #888; font-size: 0.95em; }
+.header .info-row { display: flex; justify-content: center; gap: 30px; margin-top: 18px; flex-wrap: wrap; }
+.header .info-badge {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 18px; font-size: 0.9em;
+}
+.info-badge span { color: var(--gold); font-weight: 600; }
+
+/* ====== MAIN ====== */
+.main { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+
+/* ====== TABS ====== */
+.tabs { display: flex; gap: 4px; margin-bottom: 30px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 12px 24px; border: 1px solid var(--border); background: var(--card);
+  color: #999; cursor: pointer; border-radius: 10px 10px 0 0;
+  transition: all .25s; font-size: 0.95em;
+}
+.tab-btn:hover { color: #fff; background: #2a2a3e; }
+.tab-btn.active { background: var(--card2); color: var(--gold); border-bottom-color: var(--card2); }
+.section { display: none; }
+.section.active { display: block; }
+
+/* ====== PILLARS TABLE ====== */
+.pillars-table {
+  width: 100%; border-collapse: collapse; margin-bottom: 24px;
+  border-radius: 12px; overflow: hidden;
+}
+.pillars-table th {
+  background: #2F5496; color: #fff; padding: 14px 12px;
+  font-size: 0.9em; text-align: center;
+}
+.pillars-table td {
+  background: var(--card); padding: 12px; text-align: center;
+  border: 1px solid var(--border); font-size: 0.9em;
+}
+.pillars-table .day-master { color: var(--gold); font-weight: 700; font-size: 1.1em; }
+.pillars-table .wx-dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px;
+}
+.wx-wood-dot { background: var(--wx-wood); }
+.wx-fire-dot { background: var(--wx-fire); }
+.wx-earth-dot { background: var(--wx-earth); }
+.wx-metal-dot { background: var(--wx-metal); }
+.wx-water-dot { background: var(--wx-water); }
+
+/* ====== DAYUN TIMELINE ====== */
+.dayun-timeline { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.dayun-step {
+  flex: 1; min-width: 100px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; text-align: center; transition: all .25s;
+}
+.dayun-step:hover { border-color: var(--gold); transform: translateY(-2px); }
+.dayun-step .dy-age { font-size: 0.7em; color: #666; }
+.dayun-step .dy-gz { font-size: 1.1em; color: var(--gold); font-weight: 600; margin: 4px 0; }
+.dayun-step .dy-wx { font-size: 0.75em; color: #888; }
+.dayun-step.is-yong { border-color: rgba(74,222,128,0.3); }
+.dayun-step.is-ji { border-color: rgba(232,93,117,0.3); }
+
+/* ====== SUMMARY CARDS ====== */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+.summary-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px; transition: all .25s;
+}
+.summary-card:hover { border-color: var(--gold); }
+.summary-card h3 { font-size: 1.1em; margin-bottom: 12px; }
+.summary-card .verdict { font-size: 1.5em; font-weight: 700; margin: 8px 0; }
+.verdict-good { color: var(--green); }
+.verdict-ok { color: var(--gold); }
+.verdict-warn { color: var(--red); }
+.summary-card .reason { color: #999; font-size: 0.85em; line-height: 1.8; }
+.summary-card .reason em { color: #ddd; font-style: normal; font-weight: 600; }
+.summary-tag {
+  display: inline-block; padding: 3px 10px; border-radius: 6px;
+  font-size: 0.82em; margin: 2px;
+}
+.tag-good { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.tag-bad { background: rgba(232,93,117,0.1); color: var(--red); border: 1px solid rgba(232,93,117,0.2); }
+.tag-tip { background: rgba(96,165,250,0.08); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+
+/* ====== WX BAR ====== */
+.wx-bar-wrap { margin-bottom: 24px; }
+.wx-bar-wrap .wx-label { display: flex; gap: 14px; margin-bottom: 8px; flex-wrap: wrap; }
+.wx-bar { height: 20px; border-radius: 10px; display: flex; overflow: hidden; margin-bottom: 6px; }
+.wx-bar .wx-seg-wood { background: var(--wx-wood); }
+.wx-bar .wx-seg-fire { background: var(--wx-fire); }
+.wx-bar .wx-seg-earth { background: var(--wx-earth); }
+.wx-bar .wx-seg-metal { background: var(--wx-metal); }
+.wx-bar .wx-seg-water { background: var(--wx-water); }
+
+/* ====== ANALYSIS COLLAPSIBLE ====== */
+.analysis-section { margin-bottom: 16px; }
+.analysis-header {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between;
+  align-items: center; transition: all .25s;
+}
+.analysis-header:hover { border-color: var(--gold); }
+.analysis-header h3 { font-size: 1.05em; color: #ddd; }
+.analysis-header .arrow { transition: transform .3s; color: #666; }
+.analysis-header.open .arrow { transform: rotate(180deg); }
+.analysis-body {
+  max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+  background: var(--card); border-radius: 0 0 10px 10px; padding: 0 20px;
+}
+.analysis-body.open { max-height: 8000px; padding: 16px 20px; border: 1px solid var(--border); border-top: 0; }
+.derivation {
+  padding: 12px 16px; margin: 8px 0; border-radius: 8px;
+  background: rgba(139,92,246,0.05); border-left: 3px solid var(--purple);
+  font-size: 0.9em; line-height: 1.8;
+}
+.derivation .obs { color: var(--blue); }
+.derivation .principle { color: var(--gold); }
+.derivation .conclusion { color: #ddd; }
+
+/* ====== GUIDE PANEL ====== */
+.guide-toggle {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  width: 52px; height: 52px; border-radius: 50%; border: none;
+  background: var(--gold); color: #1a1a24; font-size: 1.6em;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(201,169,110,0.3);
+  transition: all .25s; display: flex; align-items: center; justify-content: center;
+}
+.guide-toggle:hover { transform: scale(1.08); }
+.guide-panel {
+  position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+  background: #16161f; border-left: 1px solid var(--border); z-index: 999;
+  transition: right 0.35s ease; overflow-y: auto; padding: 28px 22px;
+  box-shadow: -8px 0 30px rgba(0,0,0,0.4);
+}
+.guide-panel.open { right: 0; }
+.guide-panel h3 { color: var(--gold); font-size: 1.2em; margin-bottom: 18px; }
+.guide-panel .tip {
+  background: #1e1e2c; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+  border-left: 3px solid var(--gold); font-size: 0.9em; line-height: 1.7;
+}
+.guide-panel .tip .num {
+  display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gold); color: #1a1a24; text-align: center; line-height: 22px;
+  font-size: 0.8em; font-weight: 700; margin-right: 8px;
+}
+.guide-panel .highlight { color: var(--gold); font-weight: 600; }
+.guide-panel .clickable { color: var(--blue); }
+.guide-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 998;
+}
+.guide-overlay.show { display: block; }
+
+/* ====== SISHEN LEGEND ====== */
+.shishen-legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.shishen-badge {
+  padding: 4px 10px; border-radius: 6px; font-size: 0.78em;
+  background: var(--card); border: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .summary-grid { grid-template-columns: 1fr; }
+  .header h1 { font-size: 1.6em; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class=&quot;header&quot;&gt;
+  &lt;h1&gt;八字命盘 · 子平术分析&lt;/h1&gt;
+  &lt;div class=&quot;subtitle&quot;&gt;Ba Zi · Four Pillars of Destiny&lt;/div&gt;
+  &lt;div class=&quot;info-row&quot; id=&quot;headerInfo&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;main&quot;&gt;
+
+&lt;div class=&quot;tabs&quot;&gt;
+  &lt;button class=&quot;tab-btn active&quot; onclick=&quot;switchTab(&#x27;simple&#x27;)&quot;&gt;💬 白话总结&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;chart&#x27;)&quot;&gt;📊 排盘数据&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;analysis&#x27;)&quot;&gt;📋 命理分析&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;dayun&#x27;)&quot;&gt;⏳ 大运走势&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;div id=&quot;tab-simple&quot; class=&quot;section active&quot;&gt;&lt;div id=&quot;simpleContent&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div id=&quot;tab-chart&quot; class=&quot;section&quot;&gt;&lt;div id=&quot;chartContent&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div id=&quot;tab-analysis&quot; class=&quot;section&quot;&gt;&lt;div id=&quot;analysisContent&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div id=&quot;tab-dayun&quot; class=&quot;section&quot;&gt;&lt;div id=&quot;dayunContent&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+
+&lt;button class=&quot;guide-toggle&quot; onclick=&quot;toggleGuide()&quot;&gt;?&lt;/button&gt;
+&lt;div class=&quot;guide-overlay&quot; id=&quot;guideOverlay&quot; onclick=&quot;toggleGuide()&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;guide-panel&quot; id=&quot;guidePanel&quot;&gt;
+  &lt;h3&gt;📖 怎么看这个页面&lt;/h3&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;1&lt;/span&gt; 页面顶部有 &lt;span class=&quot;highlight&quot;&gt;4 个标签&lt;/span&gt;，点它们切换内容。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;2&lt;/span&gt; 在&quot;排盘数据&quot;里，可以看到完整的八字排盘表，&lt;span class=&quot;highlight&quot;&gt;金色高亮的那个字就是你&lt;/span&gt;（日主）。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;3&lt;/span&gt; 排盘表下面的色块条是&lt;span class=&quot;highlight&quot;&gt;五行力量对比&lt;/span&gt;——哪种颜色长，哪种力量就强。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;clickable&quot;&gt;把鼠标移到十神标注上&lt;/span&gt;可以看到它的含义。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;5&lt;/span&gt; &quot;白话总结&quot;用&lt;span class=&quot;highlight&quot;&gt;最简单的话&lt;/span&gt;告诉你一生的关键点，没有任何专业术语。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;6&lt;/span&gt; 想看推导依据？切换到&quot;命理分析&quot;，&lt;span class=&quot;clickable&quot;&gt;点每个标题&lt;/span&gt;展开看完整推导过程。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;7&lt;/span&gt; &quot;大运走势&quot;告诉你&lt;span class=&quot;highlight&quot;&gt;每个十年&lt;/span&gt;的运势好坏。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;8&lt;/span&gt; 右下角这个 &lt;span class=&quot;highlight&quot;&gt;? 按钮&lt;/span&gt;，随时点它就能重新看到这份指南。&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+// ============================================================
+// DATA - injected from calculator output
+// ============================================================
+const BZ = {&quot;输入&quot;: {&quot;公历&quot;: &quot;1975年4月30日 12时&quot;, &quot;性别&quot;: &quot;女&quot;}, &quot;节气&quot;: &quot;清明&quot;, &quot;八字&quot;: &quot;乙卯 庚辰 丙午 甲午&quot;, &quot;四柱&quot;: {&quot;年柱&quot;: {&quot;天干&quot;: &quot;乙&quot;, &quot;地支&quot;: &quot;卯&quot;, &quot;干支&quot;: &quot;乙卯&quot;, &quot;天干五行&quot;: &quot;木&quot;, &quot;地支五行&quot;: &quot;木&quot;, &quot;藏干&quot;: [&quot;乙&quot;], &quot;纳音&quot;: &quot;城头土&quot;, &quot;藏干十神&quot;: [{&quot;干&quot;: &quot;乙&quot;, &quot;十神&quot;: &quot;正印&quot;}], &quot;日主十二长生在此&quot;: &quot;沐浴&quot;, &quot;生肖&quot;: &quot;兔&quot;}, &quot;月柱&quot;: {&quot;天干&quot;: &quot;庚&quot;, &quot;地支&quot;: &quot;辰&quot;, &quot;干支&quot;: &quot;庚辰&quot;, &quot;天干五行&quot;: &quot;金&quot;, &quot;地支五行&quot;: &quot;土&quot;, &quot;藏干&quot;: [&quot;戊&quot;, &quot;乙&quot;, &quot;癸&quot;], &quot;纳音&quot;: &quot;白蜡金&quot;, &quot;藏干十神&quot;: [{&quot;干&quot;: &quot;戊&quot;, &quot;十神&quot;: &quot;食神&quot;}, {&quot;干&quot;: &quot;乙&quot;, &quot;十神&quot;: &quot;正印&quot;}, {&quot;干&quot;: &quot;癸&quot;, &quot;十神&quot;: &quot;正官&quot;}], &quot;日主十二长生在此&quot;: &quot;冠带&quot;}, &quot;日柱&quot;: {&quot;天干&quot;: &quot;丙&quot;, &quot;地支&quot;: &quot;午&quot;, &quot;干支&quot;: &quot;丙午&quot;, &quot;天干五行&quot;: &quot;火&quot;, &quot;地支五行&quot;: &quot;火&quot;, &quot;藏干&quot;: [&quot;丁&quot;, &quot;己&quot;], &quot;纳音&quot;: &quot;沙中金&quot;, &quot;藏干十神&quot;: [{&quot;干&quot;: &quot;丁&quot;, &quot;十神&quot;: &quot;劫财&quot;}, {&quot;干&quot;: &quot;己&quot;, &quot;十神&quot;: &quot;伤官&quot;}], &quot;日主十二长生在此&quot;: &quot;帝旺&quot;, &quot;日主&quot;: &quot;丙&quot;, &quot;日主五行&quot;: &quot;火&quot;, &quot;日主阴阳&quot;: &quot;阳&quot;}, &quot;时柱&quot;: {&quot;天干&quot;: &quot;甲&quot;, &quot;地支&quot;: &quot;午&quot;, &quot;干支&quot;: &quot;甲午&quot;, &quot;天干五行&quot;: &quot;木&quot;, &quot;地支五行&quot;: &quot;火&quot;, &quot;藏干&quot;: [&quot;丁&quot;, &quot;己&quot;], &quot;纳音&quot;: &quot;路旁土&quot;, &quot;藏干十神&quot;: [{&quot;干&quot;: &quot;丁&quot;, &quot;十神&quot;: &quot;劫财&quot;}, {&quot;干&quot;: &quot;己&quot;, &quot;十神&quot;: &quot;伤官&quot;}], &quot;日主十二长生在此&quot;: &quot;帝旺&quot;}}, &quot;十神标注&quot;: {&quot;年柱&quot;: {&quot;天干十神&quot;: &quot;正印&quot;, &quot;本气十神&quot;: &quot;正印&quot;}, &quot;月柱&quot;: {&quot;天干十神&quot;: &quot;偏财&quot;, &quot;本气十神&quot;: &quot;食神&quot;}, &quot;日柱&quot;: {&quot;天干十神&quot;: &quot;比肩&quot;, &quot;本气十神&quot;: &quot;劫财&quot;}, &quot;时柱&quot;: {&quot;天干十神&quot;: &quot;偏印&quot;, &quot;本气十神&quot;: &quot;劫财&quot;}}, &quot;日主&quot;: {&quot;天干&quot;: &quot;丙&quot;, &quot;五行&quot;: &quot;火&quot;, &quot;阴阳&quot;: &quot;阳&quot;, &quot;禄神&quot;: &quot;巳&quot;}, &quot;五行分布&quot;: {&quot;木&quot;: 7, &quot;火&quot;: 8, &quot;土&quot;: 3, &quot;金&quot;: 2, &quot;水&quot;: 0}, &quot;地支关系&quot;: {&quot;冲突列表&quot;: [{&quot;关系&quot;: &quot;六害&quot;, &quot;涉及&quot;: &quot;年柱(卯)↔月柱(辰)&quot;, &quot;原理&quot;: &quot;卯与辰相害，暗中不和，小人破坏&quot;}, {&quot;关系&quot;: &quot;自刑&quot;, &quot;涉及&quot;: &quot;日柱(午)&quot;, &quot;原理&quot;: &quot;午自刑，内心纠结、自寻烦恼&quot;}, {&quot;关系&quot;: &quot;自刑&quot;, &quot;涉及&quot;: &quot;时柱(午)&quot;, &quot;原理&quot;: &quot;午自刑，内心纠结、自寻烦恼&quot;}]}, &quot;大运&quot;: {&quot;排法&quot;: &quot;顺排&quot;, &quot;起运年龄&quot;: 1, &quot;大运列表&quot;: [{&quot;步&quot;: 1, &quot;干支&quot;: &quot;辛巳&quot;, &quot;天干&quot;: &quot;辛&quot;, &quot;地支&quot;: &quot;巳&quot;, &quot;天干五行&quot;: &quot;金&quot;, &quot;地支五行&quot;: &quot;火&quot;, &quot;纳音&quot;: &quot;长流水&quot;, &quot;起运年龄&quot;: 1, &quot;年龄段&quot;: &quot;1-10岁&quot;}, {&quot;步&quot;: 2, &quot;干支&quot;: &quot;壬午&quot;, &quot;天干&quot;: &quot;壬&quot;, &quot;地支&quot;: &quot;午&quot;, &quot;天干五行&quot;: &quot;水&quot;, &quot;地支五行&quot;: &quot;火&quot;, &quot;纳音&quot;: &quot;天河水&quot;, &quot;起运年龄&quot;: 11, &quot;年龄段&quot;: &quot;11-20岁&quot;}, {&quot;步&quot;: 3, &quot;干支&quot;: &quot;癸未&quot;, &quot;天干&quot;: &quot;癸&quot;, &quot;地支&quot;: &quot;未&quot;, &quot;天干五行&quot;: &quot;水&quot;, &quot;地支五行&quot;: &quot;土&quot;, &quot;纳音&quot;: &quot;天上火&quot;, &quot;起运年龄&quot;: 21, &quot;年龄段&quot;: &quot;21-30岁&quot;}, {&quot;步&quot;: 4, &quot;干支&quot;: &quot;甲申&quot;, &quot;天干&quot;: &quot;甲&quot;, &quot;地支&quot;: &quot;申&quot;, &quot;天干五行&quot;: &quot;木&quot;, &quot;地支五行&quot;: &quot;金&quot;, &quot;纳音&quot;: &quot;剑锋金&quot;, &quot;起运年龄&quot;: 31, &quot;年龄段&quot;: &quot;31-40岁&quot;}, {&quot;步&quot;: 5, &quot;干支&quot;: &quot;乙酉&quot;, &quot;天干&quot;: &quot;乙&quot;, &quot;地支&quot;: &quot;酉&quot;, &quot;天干五行&quot;: &quot;木&quot;, &quot;地支五行&quot;: &quot;金&quot;, &quot;纳音&quot;: &quot;泉中水&quot;, &quot;起运年龄&quot;: 41, &quot;年龄段&quot;: &quot;41-50岁&quot;}, {&quot;步&quot;: 6, &quot;干支&quot;: &quot;丙戌&quot;, &quot;天干&quot;: &quot;丙&quot;, &quot;地支&quot;: &quot;戌&quot;, &quot;天干五行&quot;: &quot;火&quot;, &quot;地支五行&quot;: &quot;土&quot;, &quot;纳音&quot;: &quot;平地木&quot;, &quot;起运年龄&quot;: 51, &quot;年龄段&quot;: &quot;51-60岁&quot;}, {&quot;步&quot;: 7, &quot;干支&quot;: &quot;丁亥&quot;, &quot;天干&quot;: &quot;丁&quot;, &quot;地支&quot;: &quot;亥&quot;, &quot;天干五行&quot;: &quot;火&quot;, &quot;地支五行&quot;: &quot;水&quot;, &quot;纳音&quot;: &quot;钗钏金&quot;, &quot;起运年龄&quot;: 61, &quot;年龄段&quot;: &quot;61-70岁&quot;}, {&quot;步&quot;: 8, &quot;干支&quot;: &quot;戊子&quot;, &quot;天干&quot;: &quot;戊&quot;, &quot;地支&quot;: &quot;子&quot;, &quot;天干五行&quot;: &quot;土&quot;, &quot;地支五行&quot;: &quot;水&quot;, &quot;纳音&quot;: &quot;桑柘木&quot;, &quot;起运年龄&quot;: 71, &quot;年龄段&quot;: &quot;71-80岁&quot;}]}, &quot;用神分析&quot;: {&quot;身强身弱&quot;: &quot;身强&quot;, &quot;日主力量占比&quot;: &quot;40%&quot;, &quot;用神&quot;: [&quot;水&quot;, &quot;土&quot;, &quot;金&quot;], &quot;忌神&quot;: [&quot;木&quot;, &quot;火&quot;], &quot;调候需求&quot;: null}};
+
+// ============================================================
+// UTILS
+// ============================================================
+const WX_COLORS = {木:&#x27;var(--wx-wood)&#x27;,火:&#x27;var(--wx-fire)&#x27;,土:&#x27;var(--wx-earth)&#x27;,金:&#x27;var(--wx-metal)&#x27;,水:&#x27;var(--wx-water)&#x27;};
+const WX_NAMES = [&#x27;木&#x27;,&#x27;火&#x27;,&#x27;土&#x27;,&#x27;金&#x27;,&#x27;水&#x27;];
+
+function wxDot(wx) { return `&lt;span class=&quot;wx-dot wx-${wx}-dot&quot;&gt;&lt;/span&gt;${wx}`; }
+
+// ============================================================
+// RENDER HEADER
+// ============================================================
+function renderHeader() {
+  const d = BZ.输入;
+  const p = BZ.四柱;
+  document.getElementById(&#x27;headerInfo&#x27;).innerHTML = `
+    &lt;div class=&quot;info-badge&quot;&gt;📅 &lt;span&gt;${d.公历}&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;👤 &lt;span&gt;${d.性别}&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;🐾 &lt;span&gt;${p.年柱.生肖}&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;☀️ &lt;span&gt;日主 ${BZ.日主.天干}（${BZ.日主.五行}${BZ.日主.阴阳}）&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;📐 &lt;span&gt;${BZ.用神分析.身强身弱}&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;🎯 &lt;span&gt;用神：${BZ.用神分析.用神.join(&#x27;、&#x27;)}&lt;/span&gt;&lt;/div&gt;
+  `;
+}
+
+// ============================================================
+// TAB 1: SIMPLE SUMMARY
+// ============================================================
+function renderSimpleSummary() {
+  const bz = BZ;
+  const riwx = bz.日主.五行;
+  const sq = bz.用神分析.身强身弱;
+  const yong = bz.用神分析.用神;
+  const ji = bz.用神分析.忌神;
+  const p = bz.四柱;
+  const ss = bz.十神标注;
+
+  // Build summary cards based on actual chart analysis
+  const cards = buildSummaryCards(bz);
+  const container = document.getElementById(&#x27;simpleContent&#x27;);
+
+  cards.forEach(card =&gt; {
+    let tags = card.tags.map(t =&gt; `&lt;span class=&quot;summary-tag ${t.c}&quot;&gt;${t.t}&lt;/span&gt;`).join(&#x27;&#x27;);
+    container.innerHTML += `
+      &lt;div class=&quot;summary-card&quot;&gt;
+        &lt;h3&gt;${card.icon} ${card.title} &lt;span class=&quot;${card.vc}&quot; style=&quot;font-size:1em;float:right;&quot;&gt;${card.verdict}&lt;/span&gt;&lt;/h3&gt;
+        &lt;p class=&quot;reason&quot;&gt;${card.reason}&lt;/p&gt;
+        &lt;div style=&quot;margin-top:10px;&quot;&gt;${tags}&lt;/div&gt;
+      &lt;/div&gt;
+    `;
+  });
+
+  container.innerHTML += `
+    &lt;div style=&quot;text-align:center;color:#555;font-size:0.8em;margin-top:20px;padding:16px;&quot;&gt;
+      ⚠️ 以上为传统民俗文化分析，仅供娱乐参考。人生走向最终取决于你自己的选择和努力。&lt;br&gt;
+      想看每一步的推算依据？切换到「📋 命理分析」查看完整推导链条。
+    &lt;/div&gt;
+  `;
+}
+
+function buildSummaryCards(bz) {
+  return [{&quot;icon&quot;: &quot;🧠&quot;, &quot;title&quot;: &quot;性格&quot;, &quot;verdict&quot;: &quot;热烈直爽、重情义，脾气来得快&quot;, &quot;vc&quot;: &quot;verdict-ok&quot;, &quot;reason&quot;: &quot;日主&lt;em&gt;丙火&lt;/em&gt;，太阳之火→热情。日柱丙午帝旺→急躁。双午自刑→纠结。年乙木正印+时甲木偏印→重情义。&quot;, &quot;tags&quot;: [{&quot;t&quot;: &quot;热情直率&quot;, &quot;c&quot;: &quot;tag-good&quot;}, {&quot;t&quot;: &quot;脾气急躁&quot;, &quot;c&quot;: &quot;tag-bad&quot;}, {&quot;t&quot;: &quot;重情义&quot;, &quot;c&quot;: &quot;tag-good&quot;}, {&quot;t&quot;: &quot;容易纠结&quot;, &quot;c&quot;: &quot;tag-tip&quot;}]}, {&quot;icon&quot;: &quot;💰&quot;, &quot;title&quot;: &quot;事业财运&quot;, &quot;verdict&quot;: &quot;靠脑子赚钱，需防破财&quot;, &quot;vc&quot;: &quot;verdict-ok&quot;, &quot;reason&quot;: &quot;月干&lt;em&gt;庚金偏财&lt;/em&gt;透出不缺机会。日时双午劫财→易因朋友合伙破财。用神水/土/金→优先金水行业。&quot;, &quot;tags&quot;: [{&quot;t&quot;: &quot;有机遇&quot;, &quot;c&quot;: &quot;tag-good&quot;}, {&quot;t&quot;: &quot;忌合伙&quot;, &quot;c&quot;: &quot;tag-bad&quot;}, {&quot;t&quot;: &quot;金水行业&quot;, &quot;c&quot;: &quot;tag-good&quot;}]}, {&quot;icon&quot;: &quot;💍&quot;, &quot;title&quot;: &quot;婚姻感情&quot;, &quot;verdict&quot;: &quot;夫星弱，宜晚婚收敛强势&quot;, &quot;vc&quot;: &quot;verdict-warn&quot;, &quot;reason&quot;: &quot;正官癸水仅藏辰中，全局水=0→夫星极弱。日支午羊刃自刑→对伴侣要求高。妻强夫弱。&quot;, &quot;tags&quot;: [{&quot;t&quot;: &quot;夫星弱&quot;, &quot;c&quot;: &quot;tag-bad&quot;}, {&quot;t&quot;: &quot;宜晚婚&quot;, &quot;c&quot;: &quot;tag-tip&quot;}, {&quot;t&quot;: &quot;收敛强势&quot;, &quot;c&quot;: &quot;tag-tip&quot;}]}, {&quot;icon&quot;: &quot;🏥&quot;, &quot;title&quot;: &quot;健康&quot;, &quot;verdict&quot;: &quot;火过旺水太弱，注意心肾&quot;, &quot;vc&quot;: &quot;verdict-warn&quot;, &quot;reason&quot;: &quot;火=8极旺→心血管/失眠。水=0缺失→肾脏/泌尿。少熬夜、多喝水。&quot;, &quot;tags&quot;: [{&quot;t&quot;: &quot;少熬夜&quot;, &quot;c&quot;: &quot;tag-bad&quot;}, {&quot;t&quot;: &quot;注意心血管&quot;, &quot;c&quot;: &quot;tag-bad&quot;}, {&quot;t&quot;: &quot;多喝水&quot;, &quot;c&quot;: &quot;tag-tip&quot;}]}, {&quot;icon&quot;: &quot;⏳&quot;, &quot;title&quot;: &quot;运势曲线&quot;, &quot;verdict&quot;: &quot;31-50岁黄金期，51后守成&quot;, &quot;vc&quot;: &quot;verdict-ok&quot;, &quot;reason&quot;: &quot;1岁起运顺排。31-50甲申乙酉金运→用神发力。51后火土忌神→宜保守。&quot;, &quot;tags&quot;: [{&quot;t&quot;: &quot;31-50黄金期&quot;, &quot;c&quot;: &quot;tag-good&quot;}, {&quot;t&quot;: &quot;51后宜守&quot;, &quot;c&quot;: &quot;tag-tip&quot;}]}, {&quot;icon&quot;: &quot;🎯&quot;, &quot;title&quot;: &quot;趋吉避凶&quot;, &quot;verdict&quot;: &quot;用水/土/金忌木/火&quot;, &quot;vc&quot;: &quot;verdict-ok&quot;, &quot;reason&quot;: &quot;用神&lt;em&gt;水/土/金&lt;/em&gt;。忌神&lt;em&gt;木/火&lt;/em&gt;。有利方位：西、北。有利颜色：白、黑、蓝。&quot;, &quot;tags&quot;: [{&quot;t&quot;: &quot;用水·土·金&quot;, &quot;c&quot;: &quot;tag-good&quot;}, {&quot;t&quot;: &quot;忌木·火&quot;, &quot;c&quot;: &quot;tag-bad&quot;}, {&quot;t&quot;: &quot;西/北方位&quot;, &quot;c&quot;: &quot;tag-tip&quot;}]}];
+}
+
+// ============================================================
+// TAB 2: CHART DATA
+// ============================================================
+function renderChart() {
+  const container = document.getElementById(&#x27;chartContent&#x27;);
+  const p = BZ.四柱;
+  const ss = BZ.十神标注;
+
+  // Pillars table
+  let html = `&lt;h3 style=&quot;color:var(--gold);margin-bottom:16px;&quot;&gt;四柱八字排盘&lt;/h3&gt;`;
+  html += `&lt;table class=&quot;pillars-table&quot;&gt;
+    &lt;tr&gt;&lt;th&gt;&lt;/th&gt;&lt;th&gt;年柱&lt;/th&gt;&lt;th&gt;月柱&lt;/th&gt;&lt;th&gt;日柱&lt;/th&gt;&lt;th&gt;时柱&lt;/th&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td style=&quot;color:#888&quot;&gt;天干&lt;/td&gt;
+      &lt;td&gt;${p.年柱.天干} ${wxDot(p.年柱.天干五行)}&lt;br&gt;&lt;small style=&quot;color:#888&quot;&gt;${ss.年柱.天干十神}&lt;/small&gt;&lt;/td&gt;
+      &lt;td&gt;${p.月柱.天干} ${wxDot(p.月柱.天干五行)}&lt;br&gt;&lt;small style=&quot;color:#888&quot;&gt;${ss.月柱.天干十神}&lt;/small&gt;&lt;/td&gt;
+      &lt;td class=&quot;day-master&quot;&gt;${p.日柱.天干} ${wxDot(p.日柱.天干五行)}&lt;br&gt;&lt;small style=&quot;color:var(--gold)&quot;&gt;日主·比肩&lt;/small&gt;&lt;/td&gt;
+      &lt;td&gt;${p.时柱.天干} ${wxDot(p.时柱.天干五行)}&lt;br&gt;&lt;small style=&quot;color:#888&quot;&gt;${ss.时柱.天干十神}&lt;/small&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;&lt;td style=&quot;color:#888&quot;&gt;地支&lt;/td&gt;
+      &lt;td&gt;${p.年柱.地支} ${wxDot(p.年柱.地支五行)}&lt;br&gt;&lt;small style=&quot;color:#666&quot;&gt;${p.年柱.藏干.join(&#x27;·&#x27;)}&lt;/small&gt;&lt;/td&gt;
+      &lt;td&gt;${p.月柱.地支} ${wxDot(p.月柱.地支五行)}&lt;br&gt;&lt;small style=&quot;color:#666&quot;&gt;${p.月柱.藏干.join(&#x27;·&#x27;)}&lt;/small&gt;&lt;/td&gt;
+      &lt;td&gt;${p.日柱.地支} ${wxDot(p.日柱.地支五行)}&lt;br&gt;&lt;small style=&quot;color:#666&quot;&gt;${p.日柱.藏干.join(&#x27;·&#x27;)}&lt;/small&gt;&lt;/td&gt;
+      &lt;td&gt;${p.时柱.地支} ${wxDot(p.时柱.地支五行)}&lt;br&gt;&lt;small style=&quot;color:#666&quot;&gt;${p.时柱.藏干.join(&#x27;·&#x27;)}&lt;/small&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;&lt;td style=&quot;color:#888&quot;&gt;纳音&lt;/td&gt;
+      &lt;td&gt;${p.年柱.纳音}&lt;/td&gt;&lt;td&gt;${p.月柱.纳音}&lt;/td&gt;&lt;td&gt;${p.日柱.纳音}&lt;/td&gt;&lt;td&gt;${p.时柱.纳音}&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;&lt;td style=&quot;color:#888&quot;&gt;十二长生&lt;/td&gt;
+      &lt;td&gt;${p.年柱.日主十二长生在此}&lt;/td&gt;&lt;td&gt;${p.月柱.日主十二长生在此}&lt;/td&gt;&lt;td&gt;${p.日柱.日主十二长生在此}&lt;/td&gt;&lt;td&gt;${p.时柱.日主十二长生在此}&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;`;
+
+  // Wuxing bar
+  const wx = BZ.五行分布;
+  const wxTotal = Object.values(wx).reduce((a,b)=&gt;a+b,0);
+  html += `&lt;h3 style=&quot;color:var(--gold);margin:20px 0 12px;&quot;&gt;五行力量分布&lt;/h3&gt;`;
+  html += `&lt;div class=&quot;wx-bar&quot;&gt;`;
+  WX_NAMES.forEach(w =&gt; {
+    const pct = wx[w] ? Math.round(wx[w]/wxTotal*100) : 0;
+    if (pct &gt; 0) html += `&lt;div class=&quot;wx-seg-${w}&quot; style=&quot;width:${pct}%&quot;&gt;&lt;/div&gt;`;
+  });
+  html += `&lt;/div&gt;`;
+  html += `&lt;div class=&quot;wx-label&quot;&gt;`;
+  WX_NAMES.forEach(w =&gt; {
+    html += `&lt;span&gt;${wxDot(w)} ${wx[w]||0} (${Math.round((wx[w]||0)/wxTotal*100)}%)&lt;/span&gt;`;
+  });
+  html += `&lt;/div&gt;`;
+
+  // Yong Shen
+  const yong = BZ.用神分析.用神;
+  const ji = BZ.用神分析.忌神;
+  html += `&lt;h3 style=&quot;color:var(--gold);margin:20px 0 12px;&quot;&gt;用神分析&lt;/h3&gt;`;
+  html += `&lt;div style=&quot;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;&quot;&gt;`;
+  html += `&lt;p&gt;&lt;strong&gt;身强身弱：&lt;/strong&gt;${BZ.用神分析.身强身弱}（日主力量占比 ${BZ.用神分析.日主力量占比}）&lt;/p&gt;`;
+  html += `&lt;p&gt;&lt;strong&gt;用神：&lt;/strong&gt;&lt;span style=&quot;color:var(--green)&quot;&gt;${yong.join(&#x27;、&#x27;)}&lt;/span&gt;&lt;/p&gt;`;
+  html += `&lt;p&gt;&lt;strong&gt;忌神：&lt;/strong&gt;&lt;span style=&quot;color:var(--red)&quot;&gt;${ji.join(&#x27;、&#x27;)}&lt;/span&gt;&lt;/p&gt;`;
+  if (BZ.用神分析.调候需求) html += `&lt;p&gt;&lt;strong&gt;调候：&lt;/strong&gt;${BZ.用神分析.调候需求}&lt;/p&gt;`;
+  html += `&lt;/div&gt;`;
+
+  // Conflicts
+  const cf = BZ.地支关系.冲突列表;
+  if (cf.length &gt; 0) {
+    html += `&lt;h3 style=&quot;color:var(--gold);margin:20px 0 12px;&quot;&gt;地支关系&lt;/h3&gt;`;
+    cf.forEach(c =&gt; {
+      html += `&lt;div style=&quot;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;margin-bottom:6px;&quot;&gt;
+        &lt;span style=&quot;color:var(--red)&quot;&gt;${c.关系}&lt;/span&gt; · ${c.涉及} · ${c.原理}
+      &lt;/div&gt;`;
+    });
+  }
+
+  container.innerHTML = html;
+}
+
+// ============================================================
+// TAB 3: ANALYSIS (collapsible)
+// ============================================================
+function renderAnalysis() {
+  const container = document.getElementById(&#x27;analysisContent&#x27;);
+  const sections = buildAnalysisSections(BZ);
+  sections.forEach(sec =&gt; {
+    const div = document.createElement(&#x27;div&#x27;);
+    div.className = &#x27;analysis-section&#x27;;
+    div.innerHTML = `
+      &lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot;&gt;
+        &lt;h3&gt;${sec.title}&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;analysis-body&quot;&gt;${sec.content}&lt;/div&gt;
+    `;
+    container.appendChild(div);
+  });
+}
+
+function buildAnalysisSections(bz) {
+  return [{&quot;title&quot;: &quot;🔍 第一步：日主强弱推导&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：日主丙火生于辰月。日支午、时支午均为帝旺根。年乙木正印+时甲木偏印生扶。仅月庚金偏财一字克泄。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 原理：得令一般（辰月休态）+得地极强（双午帝旺）+得势极强（5生扶）→身强。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 &lt;strong&gt;身强偏上限&lt;/strong&gt;。水五行=0，严重缺水调候。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;🎯 第二步：用神忌神&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：身强→需克泄耗。水（官杀）克身、土（食伤）泄身、金（财星）耗身。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 扶抑法\&quot;身强用克泄耗\&quot;+调候法\&quot;火旺需水降温\&quot;。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 用神&lt;strong&gt;水、土、金&lt;/strong&gt;，忌神&lt;strong&gt;木、火&lt;/strong&gt;。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;🧠 第三步：性格推导&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：丙火日主+日坐午帝旺+双午自刑。印星双透包围。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 丙火→太阳之火→热情光明。午为羊刃→刚烈冲动。双午自刑→内心反复。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 &lt;strong&gt;热情直爽+急躁+重情义+自寻烦恼&lt;/strong&gt;。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;💍 第四步：婚姻推导&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：女命癸水正官为夫星。癸水仅藏辰中不透。水=0。日支午(夫宫)羊刃自刑。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 夫星不显→夫缘弱。日坐羊刃→克夫倾向。妻强夫弱。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 &lt;strong&gt;宜晚婚择沉稳包容之人，收敛自身强势&lt;/strong&gt;。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;💰 第五步：事业财运&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：月庚金偏财透出被木反克。日时双午劫财。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 偏财透月→有经商潜质。木多金缺→辛苦求财。比劫夺财→破财。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 适合金水行业，不宜合伙，31-50岁为黄金期。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;🏥 第六步：健康推导&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：火=8、水=0、金=2。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 火过旺→心血管/失眠。水极弱→肾/泌尿。金偏弱→呼吸道。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 &lt;strong&gt;少熬夜、多补水、定期查心肾&lt;/strong&gt;。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;⏳ 第七步：大运关键期&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：1岁起运顺排。31-50甲申乙酉金运→用神运。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 金为用神→金运发力。火土忌神→火土运需收敛。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 &lt;strong&gt;31-50黄金期&lt;/strong&gt;，51后转守势。&lt;/div&gt;&lt;/div&gt;&quot;}, {&quot;title&quot;: &quot;📌 第八步：综合建议&quot;, &quot;content&quot;: &quot;&lt;div class=\&quot;derivation\&quot;&gt;&lt;div class=\&quot;obs\&quot;&gt;🔍 观测：用神水、土、金。忌神木、火。日主丙火禄神在巳。&lt;/div&gt;&lt;div class=\&quot;principle\&quot;&gt;📜 喜用神决定有利方向。金生水→金水行业互相促进。&lt;/div&gt;&lt;div class=\&quot;conclusion\&quot;&gt;💡 有利方位&lt;strong&gt;西、北&lt;/strong&gt;。收敛急躁、婚姻示弱、拒绝合伙、定期体检。&lt;/div&gt;&lt;/div&gt;&quot;}];
+}
+
+// ============================================================
+// TAB 4: DA YUN
+// ============================================================
+function renderDayun() {
+  const container = document.getElementById(&#x27;dayunContent&#x27;);
+  const dy = BZ.大运;
+
+  // Timeline
+  let html = `&lt;h3 style=&quot;color:var(--gold);margin-bottom:8px;&quot;&gt;大运走势&lt;/h3&gt;`;
+  html += `&lt;p style=&quot;color:#888;margin-bottom:16px;&quot;&gt;${dy.起运年龄}岁起运 · ${dy.排法}&lt;/p&gt;`;
+  html += `&lt;div class=&quot;dayun-timeline&quot;&gt;`;
+  dy.大运列表.forEach((d,i) =&gt; {
+    const isYong = BZ.用神分析.用神.includes(d.天干五行);
+    const isJi = BZ.用神分析.忌神.includes(d.天干五行);
+    const cls = isYong ? &#x27;is-yong&#x27; : isJi ? &#x27;is-ji&#x27; : &#x27;&#x27;;
+    html += `&lt;div class=&quot;dayun-step ${cls}&quot;&gt;
+      &lt;div class=&quot;dy-age&quot;&gt;${d.年龄段}&lt;/div&gt;
+      &lt;div class=&quot;dy-gz&quot;&gt;${d.干支}&lt;/div&gt;
+      &lt;div class=&quot;dy-wx&quot;&gt;${d.天干五行}+${d.地支五行}&lt;/div&gt;
+      &lt;div style=&quot;font-size:0.7em;color:${isYong?&#x27;var(--green)&#x27;:isJi?&#x27;var(--red)&#x27;:&#x27;#888&#x27;}&quot;&gt;${isYong?&#x27;用神运&#x27;:isJi?&#x27;忌神运&#x27;:&#x27;平运&#x27;}&lt;/div&gt;
+    &lt;/div&gt;`;
+  });
+  html += `&lt;/div&gt;`;
+
+  // Detailed dayun analysis
+  html += `&lt;h3 style=&quot;color:var(--gold);margin:20px 0 12px;&quot;&gt;逐运详解&lt;/h3&gt;`;
+  html += buildDayunDetails(BZ);
+
+  container.innerHTML = html;
+}
+
+function buildDayunDetails(bz) {
+  return `&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;1-10岁 · 辛巳 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;辛(金)+巳(火)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 辛金正财耗身，巳火禄神帮身→平运。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;11-20岁 · 壬午 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;壬(水)+午(火)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 壬水调候到位（用神），午火再助旺→好坏参半。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;21-30岁 · 癸未 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;癸(水)+未(土)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 癸水正官→夫星到位，婚运旺。未土合午缓解自刑。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;31-40岁 · 甲申 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;甲(木)+申(金)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 ⚡申金偏财发力（用神旺）→财运起飞！&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;41-50岁 · 乙酉 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;乙(木)+酉(金)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 ⚡酉金正财继续用神运→人生最稳十年。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;51-60岁 · 丙戌 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;丙(火)+戌(土)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 丙火忌神→注意破财。戌土泄秀→宜保守理财。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;61-70岁 · 丁亥 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;丁(火)+亥(水)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 丁火劫财忌神→注意人际破财。亥水调候→健康缓解。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;analysis-section&quot;&gt;&lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;border-left:3px solid var(--border);&quot;&gt;&lt;h3&gt;71-80岁 · 戊子 &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;戊(土)+子(水)&lt;/span&gt;&lt;/h3&gt;&lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;analysis-body&quot;&gt;&lt;div class=&quot;derivation&quot;&gt;&lt;div class=&quot;conclusion&quot;&gt;💡 戊土泄秀+子水正官→晚年平顺。&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;
+}
+
+// ============================================================
+// INTERACTIONS
+// ============================================================
+function toggleAnalysis(header) {
+  header.classList.toggle(&#x27;open&#x27;);
+  header.nextElementSibling.classList.toggle(&#x27;open&#x27;);
+}
+
+function toggleGuide() {
+  document.getElementById(&#x27;guidePanel&#x27;).classList.toggle(&#x27;open&#x27;);
+  document.getElementById(&#x27;guideOverlay&#x27;).classList.toggle(&#x27;show&#x27;);
+}
+
+function switchTab(name) {
+  document.querySelectorAll(&#x27;.section&#x27;).forEach(s =&gt; s.classList.remove(&#x27;active&#x27;));
+  document.querySelectorAll(&#x27;.tab-btn&#x27;).forEach(b =&gt; b.classList.remove(&#x27;active&#x27;));
+  document.getElementById(&#x27;tab-&#x27;+name).classList.add(&#x27;active&#x27;);
+  event.target.classList.add(&#x27;active&#x27;);
+}
+
+window.addEventListener(&#x27;load&#x27;, function() {
+  setTimeout(function() {
+    document.getElementById(&#x27;guidePanel&#x27;).classList.add(&#x27;open&#x27;);
+    document.getElementById(&#x27;guideOverlay&#x27;).classList.add(&#x27;show&#x27;);
+  }, 600);
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderHeader();
+renderSimpleSummary();
+renderChart();
+renderAnalysis();
+renderDayun();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;" style="width:100%;height:calc(100vh - 60px);border:none;"></iframe>
+</div>
+
+<div id="panel-ziwei" class="section-panel">
+  <iframe sandbox="allow-scripts allow-same-origin" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;title&gt;紫微斗数命盘 - 1975年4月30日 午时 女&lt;/title&gt;
+&lt;style&gt;
+:root {
+  --bg: #0f0f14;
+  --card: #1a1a24;
+  --card2: #222232;
+  --text: #d4d4dc;
+  --gold: #c9a96e;
+  --purple: #8b5cf6;
+  --red: #e85d75;
+  --blue: #60a5fa;
+  --green: #4ade80;
+  --water: #38bdf8;
+  --fire: #f97316;
+  --earth: #a78b5a;
+  --metal: #e2e8a0;
+  --wood: #4ade80;
+  --border: #2a2a3a;
+  --miao: #f59e0b;
+  --xian: #6b7280;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: &#x27;Segoe UI&#x27;, &#x27;Noto Sans SC&#x27;, &#x27;Microsoft YaHei&#x27;, sans-serif;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ====== HEADER ====== */
+.header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f14 100%);
+  padding: 40px 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.header h1 {
+  font-size: 2.4em;
+  background: linear-gradient(135deg, var(--gold), #e2c98a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+.header .subtitle {
+  color: #888;
+  font-size: 0.95em;
+}
+.header .info-row {
+  display: flex; justify-content: center; gap: 30px; margin-top: 18px; flex-wrap: wrap;
+}
+.header .info-badge {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 18px; font-size: 0.9em;
+}
+.header .info-badge span { color: var(--gold); font-weight: 600; }
+
+/* ====== MAIN CONTAINER ====== */
+.main { max-width: 1300px; margin: 0 auto; padding: 30px 20px; }
+
+/* ====== TAB NAV ====== */
+.tabs { display: flex; gap: 4px; margin-bottom: 30px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 12px 24px; border: 1px solid var(--border); background: var(--card);
+  color: #999; cursor: pointer; border-radius: 10px 10px 0 0;
+  transition: all .25s; font-size: 0.95em;
+}
+.tab-btn:hover { color: #fff; background: #2a2a3e; }
+.tab-btn.active { background: var(--card2); color: var(--gold); border-bottom-color: var(--card2); }
+
+/* ====== SECTION ====== */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ====== PALACE GRID ====== */
+.palace-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+.palace {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; cursor: pointer; transition: all .25s; position: relative;
+  min-height: 120px;
+}
+.palace:hover { border-color: var(--gold); box-shadow: 0 0 20px rgba(201,169,110,0.1); transform: translateY(-2px); }
+.palace.empty { opacity: 0.7; }
+.palace .palace-title {
+  font-size: 0.8em; color: var(--gold); font-weight: 700;
+  margin-bottom: 6px; letter-spacing: 1px;
+}
+.palace .palace-zhi { font-size: 0.7em; color: #666; float: right; }
+.palace .star-row { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0; }
+.palace .star-tag {
+  display: inline-block; padding: 2px 7px; border-radius: 4px;
+  font-size: 0.75em; cursor: pointer; transition: all .2s;
+  position: relative; z-index: 2;
+}
+.star-tag:hover { transform: scale(1.08); filter: brightness(1.3); }
+.star-major { background: rgba(201,169,110,0.15); color: var(--gold); border: 1px solid rgba(201,169,110,0.3); }
+.star-ji { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.star-sha { background: rgba(232,93,117,0.1); color: var(--red); border: 1px solid rgba(232,93,117,0.2); }
+.star-za { background: rgba(139,92,246,0.1); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
+.star-si { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); font-weight: 700; }
+.star-miao-mark { color: var(--miao); font-size: 0.7em; }
+.star-xian-mark { color: var(--xian); font-size: 0.7em; }
+.palace .si-row { margin-top: 4px; font-size: 0.7em; color: var(--blue); }
+.palace .dx-tag { font-size: 0.7em; color: #888; margin-top: 4px; }
+
+/* ====== MODAL OVERLAY ====== */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.75); z-index: 999; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 16px;
+  max-width: 600px; width: 92%; max-height: 80vh; overflow-y: auto;
+  padding: 28px; position: relative;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn { from { opacity:0; transform: translateY(20px) scale(0.97); } to { opacity:1; transform: translateY(0) scale(1); } }
+.modal-close {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: #666; font-size: 1.6em;
+  cursor: pointer; transition: color .2s;
+}
+.modal-close:hover { color: var(--red); }
+.modal h3 { color: var(--gold); font-size: 1.4em; margin-bottom: 4px; }
+.modal .star-meta { color: #888; font-size: 0.85em; margin-bottom: 16px; }
+.modal h4 { color: #aaa; font-size: 0.85em; text-transform: uppercase; letter-spacing: 2px; margin: 14px 0 6px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.modal .calc-steps { font-size: 0.9em; color: #aaa; line-height: 1.8; }
+.modal .calc-steps .step { margin: 4px 0; padding-left: 12px; border-left: 2px solid var(--border); }
+.modal .calc-steps .step.formula { border-left-color: var(--purple); color: #c4b5fd; }
+.modal .influence { font-size: 0.92em; line-height: 1.8; }
+.modal .influence .good { color: var(--green); }
+.modal .influence .bad { color: var(--red); }
+.modal .influence .neutral { color: #aaa; }
+.modal .wx-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;
+  margin: 2px;
+}
+.wx-wood { background: rgba(74,222,128,0.15); color: var(--wood); }
+.wx-fire { background: rgba(249,115,22,0.15); color: var(--fire); }
+.wx-earth { background: rgba(167,139,90,0.15); color: var(--earth); }
+.wx-metal { background: rgba(226,232,160,0.15); color: var(--metal); }
+.wx-water { background: rgba(56,189,248,0.15); color: var(--water); }
+
+/* ====== ANALYSIS COLLAPSIBLE ====== */
+.analysis-section { margin-bottom: 20px; }
+.analysis-header {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between;
+  align-items: center; transition: all .25s;
+}
+.analysis-header:hover { border-color: var(--gold); }
+.analysis-header h3 { font-size: 1.05em; color: #ddd; }
+.analysis-header .arrow { transition: transform .3s; color: #666; font-size: 0.9em; }
+.analysis-header.open .arrow { transform: rotate(180deg); }
+.analysis-body {
+  max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s;
+  background: var(--card); border: 0 solid var(--border); border-top: none;
+  border-radius: 0 0 10px 10px; padding: 0 20px;
+}
+.analysis-body.open { max-height: 8000px; padding: 16px 20px; border-width: 1px; border-top: 0; }
+.analysis-body .derivation {
+  padding: 10px 14px; margin: 8px 0; border-radius: 8px;
+  background: rgba(139,92,246,0.05); border-left: 3px solid var(--purple);
+}
+.derivation .obs { color: var(--blue); }
+.derivation .principle { color: var(--gold); }
+.derivation .conclusion { color: #ddd; }
+
+/* ====== SI HUA BANNER ====== */
+.sihua-banner {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.sihua-card {
+  flex: 1; min-width: 200px; border-radius: 12px; padding: 16px;
+  text-align: center; border: 1px solid var(--border);
+}
+.sihua-lu { background: rgba(74,222,128,0.06); border-color: rgba(74,222,128,0.2); }
+.sihua-quan { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.2); }
+.sihua-ke { background: rgba(96,165,250,0.06); border-color: rgba(96,165,250,0.2); }
+.sihua-ji { background: rgba(232,93,117,0.06); border-color: rgba(232,93,117,0.2); }
+.sihua-card .hua-label { font-size: 1.1em; font-weight: 700; }
+.sihua-card .hua-star { font-size: 0.9em; color: #888; margin-top: 4px; }
+.sihua-card .hua-gong { font-size: 0.8em; color: #666; }
+
+/* ====== SIMPLE SUMMARY ====== */
+.summary-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 24px; margin-bottom: 16px; transition: all .25s;
+}
+.summary-card:hover { border-color: var(--gold); }
+.summary-card h3 { font-size: 1.1em; margin-bottom: 12px; }
+.summary-card .verdict { font-size: 1.6em; font-weight: 700; margin: 8px 0; }
+.verdict-good { color: var(--green); }
+.verdict-ok { color: var(--gold); }
+.verdict-warn { color: var(--red); }
+.summary-card .reason { color: #999; font-size: 0.85em; line-height: 1.8; }
+.summary-card .reason em { color: #ddd; font-style: normal; font-weight: 600; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.summary-tag {
+  display: inline-block; padding: 3px 10px; border-radius: 6px;
+  font-size: 0.82em; margin: 2px;
+}
+.tag-good { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.tag-bad { background: rgba(232,93,117,0.1); color: var(--red); border: 1px solid rgba(232,93,117,0.2); }
+.tag-tip { background: rgba(96,165,250,0.08); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+
+/* ====== GUIDE PANEL ====== */
+.guide-toggle {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  width: 52px; height: 52px; border-radius: 50%; border: none;
+  background: var(--gold); color: #1a1a24; font-size: 1.6em;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(201,169,110,0.3);
+  transition: all .25s; display: flex; align-items: center; justify-content: center;
+}
+.guide-toggle:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(201,169,110,0.5); }
+.guide-panel {
+  position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+  background: #16161f; border-left: 1px solid var(--border); z-index: 999;
+  transition: right 0.35s ease; overflow-y: auto; padding: 28px 22px;
+  box-shadow: -8px 0 30px rgba(0,0,0,0.4);
+}
+.guide-panel.open { right: 0; }
+.guide-panel h3 { color: var(--gold); font-size: 1.2em; margin-bottom: 18px; }
+.guide-panel .tip {
+  background: #1e1e2c; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+  border-left: 3px solid var(--gold); font-size: 0.9em; line-height: 1.7;
+}
+.guide-panel .tip .num {
+  display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gold); color: #1a1a24; text-align: center; line-height: 22px;
+  font-size: 0.8em; font-weight: 700; margin-right: 8px;
+}
+.guide-panel .tip .highlight { color: var(--gold); font-weight: 600; }
+.guide-panel .tip .clickable { color: var(--blue); }
+.guide-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 998;
+}
+.guide-overlay.show { display: block; }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 768px) {
+  .palace-grid { grid-template-columns: repeat(2, 1fr); }
+  .header h1 { font-size: 1.6em; }
+  .header .info-row { gap: 10px; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;!-- ====== HEADER ====== --&gt;
+&lt;div class=&quot;header&quot;&gt;
+  &lt;h1&gt;紫微斗数 · 星盘命理&lt;/h1&gt;
+  &lt;div class=&quot;subtitle&quot;&gt;Zi Wei Dou Shu · Star Chart Analysis&lt;/div&gt;
+  &lt;div class=&quot;info-row&quot;&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;📅 &lt;span&gt;1975年4月30日 午时&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;👩 &lt;span&gt;女命&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;🐰 &lt;span&gt;乙卯年&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;📍 &lt;span&gt;命宫：戌&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;info-badge&quot;&gt;💎 &lt;span&gt;金四局&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;main&quot;&gt;
+
+&lt;!-- ====== TAB NAV ====== --&gt;
+&lt;div class=&quot;tabs&quot;&gt;
+  &lt;button class=&quot;tab-btn active&quot; onclick=&quot;switchTab(&#x27;simple&#x27;)&quot;&gt;💬 白话总结&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;chart&#x27;)&quot;&gt;🌟 星盘总览&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;analysis&#x27;)&quot;&gt;📋 命理分析&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;si-hua&#x27;)&quot;&gt;🔄 四化飞星&lt;/button&gt;
+  &lt;button class=&quot;tab-btn&quot; onclick=&quot;switchTab(&#x27;daxian&#x27;)&quot;&gt;⏳ 大限走势&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- ====== TAB 0: SIMPLE SUMMARY ====== --&gt;
+&lt;div id=&quot;tab-simple&quot; class=&quot;section active&quot;&gt;
+  &lt;div id=&quot;simpleContent&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- ====== TAB 1: STAR CHART ====== --&gt;
+&lt;div id=&quot;tab-chart&quot; class=&quot;section&quot;&gt;
+
+&lt;div class=&quot;sihua-banner&quot;&gt;
+  &lt;div class=&quot;sihua-card sihua-lu&quot;&gt;&lt;div class=&quot;hua-label&quot; style=&quot;color:var(--green)&quot;&gt;🟢 化禄&lt;/div&gt;&lt;div class=&quot;hua-star&quot;&gt;天机&lt;/div&gt;&lt;div class=&quot;hua-gong&quot;&gt;在 财帛宫(午)&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sihua-card sihua-quan&quot;&gt;&lt;div class=&quot;hua-label&quot; style=&quot;color:var(--purple)&quot;&gt;🟣 化权&lt;/div&gt;&lt;div class=&quot;hua-star&quot;&gt;天梁&lt;/div&gt;&lt;div class=&quot;hua-gong&quot;&gt;在 夫妻宫(申)&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sihua-card sihua-ke&quot;&gt;&lt;div class=&quot;hua-label&quot; style=&quot;color:var(--blue)&quot;&gt;🔵 化科&lt;/div&gt;&lt;div class=&quot;hua-star&quot;&gt;紫微&lt;/div&gt;&lt;div class=&quot;hua-gong&quot;&gt;在 子女宫(未)&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sihua-card sihua-ji&quot;&gt;&lt;div class=&quot;hua-label&quot; style=&quot;color:var(--red)&quot;&gt;🔴 化忌&lt;/div&gt;&lt;div class=&quot;hua-star&quot;&gt;太阴&lt;/div&gt;&lt;div class=&quot;hua-gong&quot;&gt;在 迁移宫(辰)&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;palace-grid&quot; id=&quot;palaceGrid&quot;&gt;&lt;/div&gt;
+
+&lt;/div&gt;
+
+&lt;!-- ====== TAB 2: ANALYSIS ====== --&gt;
+&lt;div id=&quot;tab-analysis&quot; class=&quot;section&quot;&gt;
+  &lt;div id=&quot;analysisContent&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- ====== TAB 3: SI HUA ====== --&gt;
+&lt;div id=&quot;tab-si-hua&quot; class=&quot;section&quot;&gt;
+  &lt;div id=&quot;sihuaContent&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- ====== TAB 4: DA XIAN ====== --&gt;
+&lt;div id=&quot;tab-daxian&quot; class=&quot;section&quot;&gt;
+  &lt;div id=&quot;daxianContent&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+
+&lt;!-- ====== STAR DETAIL MODAL ====== --&gt;
+&lt;div class=&quot;modal-overlay&quot; id=&quot;starModal&quot;&gt;
+  &lt;div class=&quot;modal&quot; id=&quot;starModalContent&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- ====== GUIDE PANEL ====== --&gt;
+&lt;button class=&quot;guide-toggle&quot; id=&quot;guideToggle&quot; onclick=&quot;toggleGuide()&quot;&gt;?&lt;/button&gt;
+&lt;div class=&quot;guide-overlay&quot; id=&quot;guideOverlay&quot; onclick=&quot;toggleGuide()&quot;&gt;&lt;/div&gt;
+&lt;div class=&quot;guide-panel&quot; id=&quot;guidePanel&quot;&gt;
+  &lt;h3&gt;📖 怎么看这个页面&lt;/h3&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;1&lt;/span&gt; 页面顶部有 &lt;span class=&quot;highlight&quot;&gt;4 个标签&lt;/span&gt;，点它们切换内容。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;2&lt;/span&gt; 在&quot;星盘总览&quot;里，你会看到12个格子，每个格子代表人生的一个方面——比如&lt;span class=&quot;highlight&quot;&gt;婚姻&lt;/span&gt;、&lt;span class=&quot;highlight&quot;&gt;钱财&lt;/span&gt;、&lt;span class=&quot;highlight&quot;&gt;工作&lt;/span&gt;。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;3&lt;/span&gt; 格子里的 &lt;span class=&quot;highlight&quot;&gt;金色字&lt;/span&gt; 是重要的星，&lt;span class=&quot;highlight&quot;&gt;绿色字&lt;/span&gt; 是好的星，&lt;span class=&quot;highlight&quot;&gt;红色字&lt;/span&gt; 是需要留意的星。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;clickable&quot;&gt;点击任意一个星的名称&lt;/span&gt; → 会弹出小窗，告诉你：这个星是干嘛的、为什么出现在这里、对你有什么影响。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;5&lt;/span&gt; &lt;span class=&quot;clickable&quot;&gt;点击任意一个格子&lt;/span&gt; → 会弹出小窗，告诉你这个人生方面的完整信息。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;6&lt;/span&gt; 在&quot;命理分析&quot;里，&lt;span class=&quot;clickable&quot;&gt;点击每个标题&lt;/span&gt; 可以展开详细解释。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;7&lt;/span&gt; 按 &lt;span class=&quot;highlight&quot;&gt;ESC 键&lt;/span&gt; 可以关闭弹窗。&lt;/div&gt;
+  &lt;div class=&quot;tip&quot;&gt;&lt;span class=&quot;num&quot;&gt;8&lt;/span&gt; 右下角这个 &lt;span class=&quot;highlight&quot;&gt;? 按钮&lt;/span&gt;，随时点它就能重新看到这份指南。&lt;/div&gt;
+  &lt;div style=&quot;margin-top:18px;padding-top:14px;border-top:1px solid #2a2a3a;color:#666;font-size:0.8em;&quot;&gt;
+  试试看：切换到&quot;星盘总览&quot;，找到写着&lt;span style=&quot;color:#c9a96e&quot;&gt;天梁&lt;/span&gt;的格子，点一下&quot;天梁&quot;两个字。
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+// ============================================================
+// DATA - from Ziwei Calculator
+// ============================================================
+const chartData = {
+  input: { gregorian:&quot;1975年4月30日 12时&quot;, lunar:&quot;乙卯年三月十九日&quot;, sex:&quot;女&quot;, shi:&quot;午时&quot; },
+  yearGanZhi:&quot;乙卯&quot;, riGan:&quot;丙&quot;,
+  mingGong:&quot;戌&quot;, shenGong:&quot;戌&quot;, wuxingJu:&quot;金四局&quot;, ziweiAt:&quot;未&quot;,
+  gongs: [
+    {name:&quot;命宫&quot;,zhi:&quot;戌&quot;,gan:&quot;丙&quot;,major:[],aux:[{name:&quot;文曲&quot;,type:&quot;吉&quot;}],sihua:[],dx:&quot;49-58岁&quot;,
+     tris:{dui:&quot;迁移宫&quot;,he1:&quot;财帛宫&quot;,he2:&quot;官禄宫&quot;}},
+    {name:&quot;兄弟宫&quot;,zhi:&quot;酉&quot;,gan:&quot;乙&quot;,major:[{name:&quot;七杀&quot;,wx:&quot;金&quot;,miao:1}],aux:[{name:&quot;地劫&quot;,type:&quot;煞&quot;}],sihua:[],dx:&quot;59-68岁&quot;,
+     tris:{dui:&quot;交友宫&quot;,he1:&quot;疾厄宫&quot;,he2:&quot;田宅宫&quot;}},
+    {name:&quot;夫妻宫&quot;,zhi:&quot;申&quot;,gan:&quot;甲&quot;,major:[{name:&quot;天梁&quot;,wx:&quot;土&quot;,miao:1}],aux:[{name:&quot;右弼&quot;,type:&quot;吉&quot;},{name:&quot;天钺&quot;,type:&quot;吉&quot;}],sihua:[{hua:&quot;化权&quot;,star:&quot;天梁&quot;}],dx:&quot;69-78岁&quot;,
+     tris:{dui:&quot;官禄宫&quot;,he1:&quot;迁移宫&quot;,he2:&quot;福德宫&quot;}},
+    {name:&quot;子女宫&quot;,zhi:&quot;未&quot;,gan:&quot;癸&quot;,major:[{name:&quot;紫微&quot;,wx:&quot;土&quot;,miao:1},{name:&quot;天相&quot;,wx:&quot;水&quot;,miao:1}],aux:[],sihua:[{hua:&quot;化科&quot;,star:&quot;紫微&quot;}],dx:&quot;79-88岁&quot;,
+     tris:{dui:&quot;田宅宫&quot;,he1:&quot;交友宫&quot;,he2:&quot;父母宫&quot;}},
+    {name:&quot;财帛宫&quot;,zhi:&quot;午&quot;,gan:&quot;壬&quot;,major:[{name:&quot;天机&quot;,wx:&quot;木&quot;,miao:0},{name:&quot;巨门&quot;,wx:&quot;水&quot;,miao:0}],aux:[{name:&quot;左辅&quot;,type:&quot;吉&quot;},{name:&quot;火星&quot;,type:&quot;煞&quot;}],sihua:[{hua:&quot;化禄&quot;,star:&quot;天机&quot;}],dx:&quot;89-98岁&quot;,
+     tris:{dui:&quot;福德宫&quot;,he1:&quot;官禄宫&quot;,he2:&quot;命宫&quot;}},
+    {name:&quot;疾厄宫&quot;,zhi:&quot;巳&quot;,gan:&quot;辛&quot;,major:[{name:&quot;贪狼&quot;,wx:&quot;木&quot;,miao:0}],aux:[{name:&quot;天马&quot;,type:&quot;杂&quot;},{name:&quot;铃星&quot;,type:&quot;煞&quot;},{name:&quot;地空&quot;,type:&quot;煞&quot;}],sihua:[],dx:&quot;99-108岁&quot;,
+     tris:{dui:&quot;父母宫&quot;,he1:&quot;田宅宫&quot;,he2:&quot;兄弟宫&quot;}},
+    {name:&quot;迁移宫&quot;,zhi:&quot;辰&quot;,gan:&quot;庚&quot;,major:[{name:&quot;太阳&quot;,wx:&quot;火&quot;,miao:1},{name:&quot;太阴&quot;,wx:&quot;水&quot;,miao:1}],aux:[{name:&quot;文昌&quot;,type:&quot;吉&quot;},{name:&quot;陀罗&quot;,type:&quot;煞&quot;}],sihua:[{hua:&quot;化忌&quot;,star:&quot;太阴&quot;}],dx:&quot;109-118岁&quot;,
+     tris:{dui:&quot;命宫&quot;,he1:&quot;福德宫&quot;,he2:&quot;夫妻宫&quot;}},
+    {name:&quot;交友宫&quot;,zhi:&quot;卯&quot;,gan:&quot;己&quot;,major:[{name:&quot;武曲&quot;,wx:&quot;金&quot;,miao:1},{name:&quot;天府&quot;,wx:&quot;土&quot;,miao:1}],aux:[{name:&quot;禄存&quot;,type:&quot;吉&quot;}],sihua:[],dx:&quot;119-128岁&quot;,
+     tris:{dui:&quot;兄弟宫&quot;,he1:&quot;父母宫&quot;,he2:&quot;子女宫&quot;}},
+    {name:&quot;官禄宫&quot;,zhi:&quot;寅&quot;,gan:&quot;戊&quot;,major:[{name:&quot;天同&quot;,wx:&quot;水&quot;,miao:1}],aux:[{name:&quot;擎羊&quot;,type:&quot;煞&quot;}],sihua:[],dx:&quot;9-18岁&quot;,
+     tris:{dui:&quot;夫妻宫&quot;,he1:&quot;命宫&quot;,he2:&quot;财帛宫&quot;}},
+    {name:&quot;田宅宫&quot;,zhi:&quot;丑&quot;,gan:&quot;己&quot;,major:[{name:&quot;破军&quot;,wx:&quot;水&quot;,miao:1}],aux:[],sihua:[],dx:&quot;19-28岁&quot;,
+     tris:{dui:&quot;子女宫&quot;,he1:&quot;兄弟宫&quot;,he2:&quot;疾厄宫&quot;}},
+    {name:&quot;福德宫&quot;,zhi:&quot;子&quot;,gan:&quot;戊&quot;,major:[],aux:[{name:&quot;天魁&quot;,type:&quot;吉&quot;}],sihua:[],dx:&quot;29-38岁&quot;,
+     tris:{dui:&quot;财帛宫&quot;,he1:&quot;夫妻宫&quot;,he2:&quot;迁移宫&quot;}},
+    {name:&quot;父母宫&quot;,zhi:&quot;亥&quot;,gan:&quot;丁&quot;,major:[{name:&quot;廉贞&quot;,wx:&quot;火&quot;,miao:1}],aux:[],sihua:[],dx:&quot;39-48岁&quot;,
+     tris:{dui:&quot;疾厄宫&quot;,he1:&quot;子女宫&quot;,he2:&quot;交友宫&quot;}},
+  ],
+  sihua: {化禄:&quot;天机&quot;,化权:&quot;天梁&quot;,化科:&quot;紫微&quot;,化忌:&quot;太阴&quot;},
+  daxian: {paiFa:&quot;顺行&quot;,list:[
+    {gong:&quot;官禄宫&quot;,zhi:&quot;戌&quot;,age:&quot;9-18岁&quot;},{gong:&quot;田宅宫&quot;,zhi:&quot;亥&quot;,age:&quot;19-28岁&quot;},
+    {gong:&quot;福德宫&quot;,zhi:&quot;子&quot;,age:&quot;29-38岁&quot;},{gong:&quot;父母宫&quot;,zhi:&quot;丑&quot;,age:&quot;39-48岁&quot;},
+    {gong:&quot;命宫&quot;,zhi:&quot;寅&quot;,age:&quot;49-58岁&quot;},{gong:&quot;兄弟宫&quot;,zhi:&quot;卯&quot;,age:&quot;59-68岁&quot;},
+    {gong:&quot;夫妻宫&quot;,zhi:&quot;辰&quot;,age:&quot;69-78岁&quot;},{gong:&quot;子女宫&quot;,zhi:&quot;巳&quot;,age:&quot;79-88岁&quot;},
+    {gong:&quot;财帛宫&quot;,zhi:&quot;午&quot;,age:&quot;89-98岁&quot;},{gong:&quot;疾厄宫&quot;,zhi:&quot;未&quot;,age:&quot;99-108岁&quot;},
+    {gong:&quot;迁移宫&quot;,zhi:&quot;申&quot;,age:&quot;109-118岁&quot;},{gong:&quot;交友宫&quot;,zhi:&quot;酉&quot;,age:&quot;119-128岁&quot;},
+  ]},
+  allStars: {}
+};
+
+// Build allStars map
+chartData.gongs.forEach(g =&gt; {
+  g.major.forEach(s =&gt; { chartData.allStars[s.name] = { type:&#x27;major&#x27;, ...s, gong:g.name, gongZhi:g.zhi, gongGan:g.gan, palace:g }; });
+  g.aux.forEach(s =&gt; { chartData.allStars[s.name] = { type:&#x27;aux&#x27;, ...s, gong:g.name, gongZhi:g.zhi, palace:g }; });
+});
+
+// ============================================================
+// STAR DATABASE (for modal popups)
+// ============================================================
+const starDB = {
+  &quot;紫微&quot;:{wx:&quot;土&quot;,cat:&quot;北斗帝王星&quot;,role:&quot;众星之主，代表权威、领导力、尊贵。&quot;,
+    desc:&quot;紫微星是紫微斗数十四主星之首，属阴土，化气为尊。在命：威严自重、好面子、有领导欲、重排场。喜得左辅右弼相随（\&quot;辅弼拱主\&quot;），忌独坐无辅（孤君）。&quot;,
+    calc:&quot;根据五行局（金四局）和农历生日（十九日），查紫微星定位表：金四局，日十九 → 紫微在未宫。&quot;},
+  &quot;天机&quot;:{wx:&quot;木&quot;,cat:&quot;南斗智星&quot;,role:&quot;谋士之星，代表智慧、谋划、变动。&quot;,
+    desc:&quot;天机属阴木，化气为善。在命：聪明机敏、善谋划分析、但心性多变。喜化禄（智禄生财），忌煞星冲破（聪明反被聪明误）。在财帛宫化禄 → 靠脑子和口才赚钱的最强信号。&quot;,
+    calc:&quot;从紫微星（未宫）逆数1位 → 午宫，安天机。紫微在未，天机必在午。&quot;},
+  &quot;太阳&quot;:{wx:&quot;火&quot;,cat:&quot;北斗阳星&quot;,role:&quot;光明之星，代表父亲、丈夫（女命）、事业、名声。&quot;,
+    desc:&quot;太阳属阳火，化气为贵。庙旺则光芒万丈、热情博爱；落陷则过于消耗自己、不得人心。在迁移宫庙旺 → 对外形象光辉，受人欢迎。女命太阳入迁移 → 事业心和社交能力强。&quot;,
+    calc:&quot;从紫微星（未宫）逆数3位 → 辰宫，安太阳。紫微在未，太阳必在辰。&quot;},
+  &quot;武曲&quot;:{wx:&quot;金&quot;,cat:&quot;北斗财星&quot;,role:&quot;财帛主，代表财富、决断、刚毅。&quot;,
+    desc:&quot;武曲属阴金，化气为财。在命：刚直果决、重义轻财、执行力强。是\&quot;正财星\&quot;，主踏实赚钱而非投机。在交友宫 + 天府 + 禄存 → 朋友圈有财库，身边人多金有实力。&quot;,
+    calc:&quot;从紫微星（未宫）逆数4位 → 卯宫，安武曲。紫微在未，武曲必在卯。&quot;},
+  &quot;天同&quot;:{wx:&quot;水&quot;,cat:&quot;南斗福星&quot;,role:&quot;福气之星，代表温和、享乐、不争。&quot;,
+    desc:&quot;天同属阳水，化气为福。在命：性情温和、知足常乐、不爱争抢。在官禄宫庙旺 → 适合悠闲型事业、不喜欢高压环境。加擎羊 → 福星被煞星干扰，事业中虽想安逸但不得不面对竞争。&quot;,
+    calc:&quot;从紫微星（未宫）逆数5位 → 寅宫，安天同。紫微在未，天同必在寅。&quot;},
+  &quot;廉贞&quot;:{wx:&quot;火&quot;,cat:&quot;北斗次桃花&quot;,role:&quot;官禄主+次桃花，代表事业心、情感纠葛。&quot;,
+    desc:&quot;廉贞属阴火，化气为囚。在命：事业心强、有领导欲、情感丰富但也容易卷入感情纠纷。在父母宫庙旺 → 父母有社会地位或事业心强，与父母关系中夹杂事业传承。&quot;,
+    calc:&quot;从紫微星（未宫）逆数8位 → 亥宫，安廉贞。紫微在未，廉贞必在亥。&quot;},
+  &quot;天府&quot;:{wx:&quot;土&quot;,cat:&quot;南斗库星&quot;,role:&quot;财库之星，代表包容、稳重、储财。&quot;,
+    desc:&quot;天府属阳土，化气为库。与紫微同为帝王星但更接地气。在命：包容稳重、善于守成、有经济头脑。在交友宫 + 武曲 + 禄存 → \&quot;武府同宫\&quot;，是顶级的财富朋友圈格局。&quot;,
+    calc:&quot;紫微在未，天府必在卯（紫府对称，寅申/卯酉/辰戌/巳亥/子午/丑未对应）。天府所在 = (寅+申 - 未) = 卯宫。&quot;},
+  &quot;太阴&quot;:{wx:&quot;水&quot;,cat:&quot;南斗阴星&quot;,role:&quot;月亮之星，代表母亲、妻子（男命）、情感、细腻。&quot;,
+    desc:&quot;太阴属阴水，化气为富。庙旺则温婉细腻、善解人意；落陷则多愁善感、情绪化。在迁移宫庙旺+化忌 → \&quot;日月并明\&quot;被破，明明对外形象好但内心充满不安。化忌在迁移是此盘最大的情绪痛点。&quot;,
+    calc:&quot;天府在卯，顺数1位 → 辰宫，安太阴。天府系星：天府→太阴→贪狼→巨门→天相→天梁→七杀→破军。&quot;},
+  &quot;贪狼&quot;:{wx:&quot;木&quot;,cat:&quot;北斗桃花星&quot;,role:&quot;欲望之星，代表桃花、才艺、交际、贪欲。&quot;,
+    desc:&quot;贪狼属阳木，化气为桃花。是紫微斗数第一桃花星，但也主才艺和交际。在疾厄宫 → 身体健康与欲望相关：易因饮食不节、纵欲、情绪波动致病。加铃星地空 → 煞星加重健康隐患。&quot;,
+    calc:&quot;天府在卯，顺数2位 → 巳宫，安贪狼。&quot;},
+  &quot;巨门&quot;:{wx:&quot;水&quot;,cat:&quot;北斗暗星&quot;,role:&quot;口舌之星，代表是非、沟通、深究。&quot;,
+    desc:&quot;巨门属阴水，化气为暗。在命：善于分析深究、口才好但易招惹是非。在财帛宫 + 天机化禄 → 靠\&quot;嘴巴\&quot;赚钱（销售、咨询、法律），暗星化禄反为妙——是非转化为了收入。&quot;,
+    calc:&quot;天府在卯，顺数3位 → 午宫，安巨门。&quot;},
+  &quot;天相&quot;:{wx:&quot;水&quot;,cat:&quot;南斗印星&quot;,role:&quot;辅佐之星，代表协调、公正、文书。&quot;,
+    desc:&quot;天相属阳水，化气为印。是辅佐型星曜，不喜独当一面但善于协调管理。在子女宫 + 紫微 → \&quot;紫相同宫\&quot;，子女既尊贵（紫微）又懂协调（天相），是很好的后代配置。&quot;,
+    calc:&quot;天府在卯，顺数4位 → 未宫，安天相。&quot;},
+  &quot;天梁&quot;:{wx:&quot;土&quot;,cat:&quot;南斗荫星&quot;,role:&quot;长寿之星，代表庇护、稳重、长辈缘。&quot;,
+    desc:&quot;天梁属阳土，化气为荫。在命：老成持重、有责任心、爱照顾人。在夫妻宫庙旺化权 → 配偶如长辈般庇护你，且掌家中话语权。+右弼天钺双吉星 → 配偶有暗中的贵人气场，是\&quot;嫁得好\&quot;的信号。&quot;,
+    calc:&quot;天府在卯，顺数5位 → 申宫，安天梁。&quot;},
+  &quot;七杀&quot;:{wx:&quot;金&quot;,cat:&quot;南斗将星&quot;,role:&quot;将星，代表果断、竞争、杀伐、权威。&quot;,
+    desc:&quot;七杀属阴金，化气为将。在命：刚毅果断、雷厉风行、不怒自威。在兄弟宫庙旺 → 兄弟姐妹中有人性格刚强、有领导力。加地劫 → 兄弟关系中可能有波折或分离。&quot;,
+    calc:&quot;天府在卯，顺数6位 → 酉宫，安七杀。&quot;},
+  &quot;破军&quot;:{wx:&quot;水&quot;,cat:&quot;北斗先锋&quot;,role:&quot;破旧立新之星，代表变革、冲动、破坏后重建。&quot;,
+    desc:&quot;破军属阴水，化气为耗。在命：敢闯敢拼、喜欢变革、不喜墨守成规。在田宅宫庙旺 → 家中常变动（搬家、翻修、换房），家庭生活不平淡。破军在丑为庙旺，破旧之力得到缓冲——不是毁家，是折腾。&quot;,
+    calc:&quot;天府在卯，顺数10位 → 丑宫，安破军。&quot;},
+
+  // 辅星
+  &quot;文昌&quot;:{wx:&quot;金&quot;,cat:&quot;六吉·文星&quot;,role:&quot;文曲的搭档，代表文书、考试、学识、契约。&quot;,
+    desc:&quot;文昌是正统的文星，主考试运、文书、合同。在迁移宫 + 太阳太阴 → 对外写作、演讲能力强，适合靠笔杆子或口才在外发展。&quot;,
+    calc:&quot;从戌宫起子时，逆数到午时（出生时辰）：戌→酉→申→未→午→巳→辰。文昌在辰（迁移宫）。&quot;},
+  &quot;文曲&quot;:{wx:&quot;水&quot;,cat:&quot;六吉·才艺星&quot;,role:&quot;文昌的搭档，代表才艺、审美、感性、异路功名。&quot;,
+    desc:&quot;文曲是偏才艺的文星，主艺术、审美、灵活应变。在命宫（戌）独坐 → 命主有艺术细胞，但空宫限制了发挥。文曲坐命说明\&quot;气质不错\&quot;。&quot;,
+    calc:&quot;从辰宫起子时，顺数到午时：辰→巳→午→未→申→酉→戌。文曲在戌（命宫）。&quot;},
+  &quot;左辅&quot;:{wx:&quot;土&quot;,cat:&quot;六吉·辅佐星&quot;,role:&quot;辅助贵人，代表正面帮助、支持、提携。&quot;,
+    desc:&quot;左辅是\&quot;明面上的贵人\&quot;——公开挺你、正面帮你的人。在财帛宫 → 赚钱的路上有人带着你、帮衬你。左辅 + 天机化禄 → 贵人引路 + 自己聪明 = 很好的求财组合。&quot;,
+    calc:&quot;从辰宫起正月，顺数到三月（农历三月）：辰→巳→午。左辅在午（财帛宫）。&quot;},
+  &quot;右弼&quot;:{wx:&quot;土&quot;,cat:&quot;六吉·辅佐星&quot;,role:&quot;辅助贵人，代表暗中帮助、幕后支持。&quot;,
+    desc:&quot;右弼是\&quot;暗中的贵人\&quot;——不声不响帮你的人。在夫妻宫 + 天梁化权 → 配偶在你看不到的地方为你铺路。右弼比左辅更\&quot;润物细无声\&quot;。&quot;,
+    calc:&quot;从戌宫起正月，逆数到三月：戌→酉→申。右弼在申（夫妻宫）。&quot;},
+  &quot;天魁&quot;:{wx:&quot;火&quot;,cat:&quot;六吉·天贵&quot;,role:&quot;天降贵人之星，代表意外帮助、考运、权威提携。&quot;,
+    desc:&quot;天魁是\&quot;天上掉下来的贵人\&quot;——在最需要的时候突然出现的帮助。在福德宫（空宫）+ 天魁独坐 → 内心虽简单但不孤单，关键时刻总有贵人提点。&quot;,
+    calc:&quot;乙年出生 → 天魁在子（福德宫）。乙年天魁口诀：乙己鼠猴乡 → 乙年天魁在子。&quot;},
+  &quot;天钺&quot;:{wx:&quot;火&quot;,cat:&quot;六吉·天贵&quot;,role:&quot;天贵人之星，代表暗中提携、长辈缘、科考运。&quot;,
+    desc:&quot;天钺与天魁类似但偏\&quot;隐性\&quot;。在夫妻宫 + 天梁化权 + 右弼 → 三重吉星加持！配偶自带\&quot;贵人光环\&quot;，可能是通过长辈介绍或在工作中认识的。&quot;,
+    calc:&quot;乙年出生 → 天钺在申（夫妻宫）。乙年天钺口诀：乙己鼠猴乡 → 乙年天钺在申。&quot;},
+  &quot;禄存&quot;:{wx:&quot;土&quot;,cat:&quot;六吉·禄星&quot;,role:&quot;实禄之星，代表稳定财富、积蓄、实在的好处。&quot;,
+    desc:&quot;禄存是\&quot;实打实的禄\&quot;——不是虚的、不是人情的，是真金白银。在交友宫+武曲天府 → 朋友圈帮你带来实实在在的利益。禄存永远被擎羊陀罗夹，所以\&quot;禄存坐命，羊陀夹命\&quot;。&quot;,
+    calc:&quot;乙年干 → 禄存在卯（交友宫）。乙年禄存口诀：甲乙丙丁戊己庚辛壬癸 → 寅卯巳午巳午申酉亥子 → 乙年禄存在卯。&quot;},
+  &quot;擎羊&quot;:{wx:&quot;金&quot;,cat:&quot;六煞·刑星&quot;,role:&quot;明面的伤害、冲突、竞争、意外之灾。&quot;,
+    desc:&quot;擎羊是\&quot;明刀明枪\&quot;的伤害，主冲突、争吵、意外伤害。在官禄宫 → 职场中有明面上的竞争或小人，事业发展总有\&quot;明着来\&quot;的阻力。擎羊前一位是禄存——所谓\&quot;富贵险中求\&quot;。&quot;,
+    calc:&quot;禄存在卯 → 擎羊在禄存前一宫 = 寅（官禄宫）。擎羊永远在禄存的前一宫。&quot;},
+  &quot;陀罗&quot;:{wx:&quot;金&quot;,cat:&quot;六煞·忌星&quot;,role:&quot;暗中的拖延、纠缠、慢性消耗。&quot;,
+    desc:&quot;陀罗是\&quot;暗中的纠缠\&quot;——慢性拖延、回旋反复、甩不掉的麻烦。在迁移宫 + 太阴化忌 → 加重了化忌的效果：外出/远行中的麻烦不是一次性的，而是反复纠缠。&quot;,
+    calc:&quot;禄存在卯 → 陀罗在禄存后一宫 = 辰（迁移宫）。陀罗永远在禄存的后一宫。&quot;},
+  &quot;火星&quot;:{wx:&quot;火&quot;,cat:&quot;六煞·火煞&quot;,role:&quot;突然的灾难、暴发、冲动之事。&quot;,
+    desc:&quot;火星主\&quot;突发\&quot;——好事坏事都来得突然。在财帛宫 → 钱来得快、去得也快。天机化禄遇火星 → 赚钱时有突发机会但也有突发损失，需要稳住。&quot;,
+    calc:&quot;年支卯 + 时支午 → 火星在午（财帛宫）。火星安法：寅午戌年从丑起子时顺数，但卯年从…(具体查表)，最终落在午。&quot;},
+  &quot;铃星&quot;:{wx:&quot;火&quot;,cat:&quot;六煞·火煞&quot;,role:&quot;暗中燃烧的烦恼、慢性炎症、煎熬。&quot;,
+    desc:&quot;铃星与火星类似但更\&quot;慢性\&quot;——不是突发的灾难，而是长期的煎熬。在疾厄宫 + 贪狼 → 慢性炎症、长期身体消耗，需要长期调理而非急救。&quot;,
+    calc:&quot;年支卯 + 时支午 → 铃星在巳（疾厄宫）。&quot;},
+  &quot;地空&quot;:{wx:&quot;火&quot;,cat:&quot;六煞·空亡&quot;,role:&quot;落空、幻想、不切实际、突然中断。&quot;,
+    desc:&quot;地空主\&quot;突然落空\&quot;——计划好的事突然泡汤、钱突然没了、机会突然消失。在疾厄宫 → 健康出问题时来得突然（急症多于慢病）。&quot;,
+    calc:&quot;时支午 → 地空在巳（疾厄宫）。地空口诀：子亥丑子寅丑卯寅辰卯巳辰午巳未午申未酉申戌酉亥戌 → 午时 → 巳宫。&quot;},
+  &quot;地劫&quot;:{wx:&quot;火&quot;,cat:&quot;六煞·劫煞&quot;,role:&quot;被劫夺、破耗、波动、内心痛苦。&quot;,
+    desc:&quot;地劫主\&quot;被劫夺\&quot;——被人抢走机会/钱财/感情。在兄弟宫+七杀 → 兄弟姐妹间有矛盾或被兄弟姐妹连累。&quot;,
+    calc:&quot;时支午 → 地劫在酉（兄弟宫）。&quot;},
+  &quot;天马&quot;:{wx:&quot;火&quot;,cat:&quot;杂曜·驿马&quot;,role:&quot;奔波、迁移、旅行、动态。&quot;,
+    desc:&quot;天马是\&quot;驿马星\&quot;——主奔波、迁移、频繁变动。在疾厄宫 → 疾病与过度劳累奔波有关。天马 + 贪狼 → 因欲望驱动而奔波劳碌。&quot;,
+    calc:&quot;年支卯（亥卯未） → 天马在巳（疾厄宫）。亥卯未年天马在巳。&quot;},
+};
+
+// Helper: palace position mapping for display layout
+const PALACE_LAYOUT = [
+  {pos:4, idx:8}, {pos:5, idx:9}, {pos:6, idx:10}, {pos:7, idx:11},
+  {pos:3, idx:7}, {pos:8, idx:0},
+  {pos:2, idx:6}, {pos:9, idx:1},
+  {pos:1, idx:5}, {pos:10, idx:2},
+  {pos:0, idx:4}, {pos:11, idx:3},
+];
+
+// ============================================================
+// RENDER SIMPLE SUMMARY
+// ============================================================
+function renderSimpleSummary() {
+  const container = document.getElementById(&#x27;simpleContent&#x27;);
+  const cards = [
+    {icon:&#x27;💍&#x27;,title:&#x27;婚姻&#x27;,verdict:&#x27;不错，能找到靠谱的人&#x27;,verdictClass:&#x27;verdict-good&#x27;,
+     reason:&#x27;你的&lt;em&gt;夫妻宫&lt;/em&gt;里有一颗叫&lt;em&gt;天梁&lt;/em&gt;的星——这颗星代表稳重、有担当、像长辈一样照顾你的人。更难得的是，旁边还有两颗&quot;暗中帮助&quot;的好星（右弼、天钺），说明你配偶不只是自己好，还会在你看不到的地方帮你铺路。婚姻中&lt;em&gt;对方可能比你强势&lt;/em&gt;，但这是好事——你性格里火气太旺，需要一个稳得住的人来平衡。&#x27;,
+     tags:[{t:&#x27;宜晚婚&#x27;,c:&#x27;tag-tip&#x27;},{t:&#x27;找年长稳重的&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;配偶会暗中帮你&#x27;,c:&#x27;tag-good&#x27;}]},
+    {icon:&#x27;💰&#x27;,title:&#x27;财运&#x27;,verdict:&#x27;靠脑子和嘴巴吃饭，不差钱&#x27;,verdictClass:&#x27;verdict-good&#x27;,
+     reason:&#x27;你的&lt;em&gt;财帛宫&lt;/em&gt;（管钱的地方）里有一颗叫&lt;em&gt;天机&lt;/em&gt;的星，而且被&quot;化禄&quot;（禄=钱、福气）点亮了。这是非常好的信号——意思是你的聪明头脑就是赚钱工具。适合的工作：咨询、销售、中介、策划、培训——总之是靠脑子不靠体力。旁边还有一颗&lt;em&gt;左辅&lt;/em&gt;星，说明赚钱路上有人带你。但注意：还有一颗&lt;em&gt;火星&lt;/em&gt;，钱来得快去得也快，要会存钱。&#x27;,
+     tags:[{t:&#x27;适合靠嘴吃饭&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;有贵人带路&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;要会存钱&#x27;,c:&#x27;tag-tip&#x27;}]},
+    {icon:&#x27;💪&#x27;,title:&#x27;事业&#x27;,verdict:&#x27;适合轻松型工作，不爱争但躲不开&#x27;,verdictClass:&#x27;verdict-ok&#x27;,
+     reason:&#x27;你的&lt;em&gt;官禄宫&lt;/em&gt;（管工作的宫殿）里有一颗&lt;em&gt;天同&lt;/em&gt;星——天同是&quot;享福之星&quot;，说明你适合不太高压的工作环境，比如教育、文化、行政、服务类。但同宫里还有一颗&lt;em&gt;擎羊&lt;/em&gt;（像一把刀），代表竞争和冲突——你本性想安逸，但环境逼得你不得不去争。这是你事业上最大的矛盾点。&#x27;,
+     tags:[{t:&#x27;别选高压工作&#x27;,c:&#x27;tag-tip&#x27;},{t:&#x27;教育/文化/服务&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;职场有竞争&#x27;,c:&#x27;tag-bad&#x27;}]},
+    {icon:&#x27;🏥&#x27;,title:&#x27;健康&#x27;,verdict:&#x27;两个隐患：慢慢熬 + 突然垮&#x27;,verdictClass:&#x27;verdict-warn&#x27;,
+     reason:&#x27;你的&lt;em&gt;疾厄宫&lt;/em&gt;（管健康的地方）情况比较复杂。一颗&lt;em&gt;贪狼&lt;/em&gt;星说明你容易管不住自己——暴饮暴食、熬夜、情绪失控。一颗&lt;em&gt;铃星&lt;/em&gt;代表慢性消耗，身体是一点点被掏空的。一颗&lt;em&gt;地空&lt;/em&gt;代表突发问题，哪天突然就垮了。还有一颗&lt;em&gt;天马&lt;/em&gt;代表奔波劳累——你太拼了，身体跟不上。总结：&lt;em&gt;管住嘴、早点睡、别太拼&lt;/em&gt;。&#x27;,
+     tags:[{t:&#x27;管住嘴&#x27;,c:&#x27;tag-bad&#x27;},{t:&#x27;别熬夜&#x27;,c:&#x27;tag-bad&#x27;},{t:&#x27;别太劳累&#x27;,c:&#x27;tag-bad&#x27;},{t:&#x27;定期体检&#x27;,c:&#x27;tag-tip&#x27;}]},
+    {icon:&#x27;👶&#x27;,title:&#x27;子女&#x27;,verdict:&#x27;孩子有出息，晚年享福&#x27;,verdictClass:&#x27;verdict-good&#x27;,
+     reason:&#x27;你的&lt;em&gt;子女宫&lt;/em&gt;是整张星盘里最耀眼的地方——两颗最尊贵的星（&lt;em&gt;紫微&lt;/em&gt;和&lt;em&gt;天相&lt;/em&gt;）同时落在这里，而且被&quot;化科&quot;（名声、学识）点亮。意思很直白：&lt;em&gt;你的孩子会很争气&lt;/em&gt;，有社会地位、有名声。你79岁以后的晚年生活，很大程度就是享受孩子的成就。&#x27;,
+     tags:[{t:&#x27;孩子争气&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;晚年有福&#x27;,c:&#x27;tag-good&#x27;}]},
+    {icon:&#x27;👥&#x27;,title:&#x27;朋友&#x27;,verdict:&#x27;朋友圈有实力派，能帮到你&#x27;,verdictClass:&#x27;verdict-good&#x27;,
+     reason:&#x27;你的&lt;em&gt;交友宫&lt;/em&gt;里有三颗好星——&lt;em&gt;武曲&lt;/em&gt;（管钱）、&lt;em&gt;天府&lt;/em&gt;（管储存）、&lt;em&gt;禄存&lt;/em&gt;（真金白银）。翻译成大白话：&lt;em&gt;你身边有些人有钱有势，而且能给你实实在在的好处&lt;/em&gt;，不是口头上的客气。但要注意分辨：谁是真心帮你的，谁只是来蹭你的。&#x27;,
+     tags:[{t:&#x27;朋友有实力&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;有人给资源&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;要分辨真假&#x27;,c:&#x27;tag-tip&#x27;}]},
+    {icon:&#x27;✈️&#x27;,title:&#x27;外出运&#x27;,verdict:&#x27;出门容易受伤，少折腾&#x27;,verdictClass:&#x27;verdict-warn&#x27;,
+     reason:&#x27;你的&lt;em&gt;迁移宫&lt;/em&gt;（管外出、远行的地方）是整个星盘里&lt;em&gt;最需要小心的地方&lt;/em&gt;。虽然有不错的星（太阳、太阴）说明你对外形象好，但其中一颗（太阴）被&quot;化忌&quot;（忌=堵住、受伤、不顺）了。意思是：&lt;em&gt;你每次外出、换城市、换环境，都容易情绪受伤或遇到麻烦&lt;/em&gt;。不是不能出门，是出门前做好心理准备。另外，不宜频繁换城市发展。&#x27;,
+     tags:[{t:&#x27;少折腾搬家&#x27;,c:&#x27;tag-bad&#x27;},{t:&#x27;外出小心&#x27;,c:&#x27;tag-bad&#x27;},{t:&#x27;出差做足准备&#x27;,c:&#x27;tag-tip&#x27;}]},
+    {icon:&#x27;🧘&#x27;,title:&#x27;内心&#x27;,verdict:&#x27;简单直接，想得不多&#x27;,verdictClass:&#x27;verdict-ok&#x27;,
+     reason:&#x27;你的&lt;em&gt;福德宫&lt;/em&gt;（管内心和精神状态的地方）是空的——这不是坏事，说明你不是那种&quot;想太多&quot;的人，内心比较简单直接。有一颗&lt;em&gt;天魁&lt;/em&gt;星在里面，代表关键时刻会有&quot;天上掉下来的贵人&quot;提点你。你快乐的来源是：&lt;em&gt;赚钱、动脑子、跟人聊天&lt;/em&gt;（这三个事情恰好和你的财帛宫呼应）。&#x27;,
+     tags:[{t:&#x27;心大不纠结&#x27;,c:&#x27;tag-good&#x27;},{t:&#x27;快乐来自赚钱聊天&#x27;,c:&#x27;tag-tip&#x27;}]},
+  ];
+
+  cards.forEach(card =&gt; {
+    let tagsHtml = card.tags.map(t =&gt; `&lt;span class=&quot;summary-tag ${t.c}&quot;&gt;${t.t}&lt;/span&gt;`).join(&#x27;&#x27;);
+    container.innerHTML += `
+      &lt;div class=&quot;summary-card&quot;&gt;
+        &lt;h3&gt;${card.icon} ${card.title} &lt;span class=&quot;${card.verdictClass}&quot; style=&quot;font-size:1.2em;float:right;&quot;&gt;${card.verdict}&lt;/span&gt;&lt;/h3&gt;
+        &lt;p class=&quot;reason&quot;&gt;${card.reason}&lt;/p&gt;
+        &lt;div style=&quot;margin-top:10px;&quot;&gt;${tagsHtml}&lt;/div&gt;
+      &lt;/div&gt;
+    `;
+  });
+
+  // Bottom note
+  container.innerHTML += `
+    &lt;div style=&quot;text-align:center;color:#555;font-size:0.8em;margin-top:20px;padding:16px;&quot;&gt;
+      ⚠️ 以上为传统民俗文化分析，仅供娱乐参考。人生走向最终取决于你自己的选择和努力。&lt;br&gt;
+      想了解每一条结论的推算依据？切换到「命理分析」「四化飞星」查看详细推导过程。
+    &lt;/div&gt;
+  `;
+}
+
+// ============================================================
+// RENDER PALACE GRID
+// ============================================================
+function renderPalaceGrid() {
+  const grid = document.getElementById(&#x27;palaceGrid&#x27;);
+  // Center empty cell layout
+  const layoutOrder = [4,5,6,7,3,-1,-1,8,2,-1,-1,9,1,10,11,0];
+  const gongMap = {};
+  chartData.gongs.forEach((g,i) =&gt; { gongMap[i] = g; });
+
+  // Use 4x4 grid with center empty
+  const displayOrder = [
+    {gong:chartData.gongs[4], label:&quot;巳&quot;}, // pos 0,0
+    {gong:chartData.gongs[5], label:&quot;午&quot;}, // pos 0,1
+    {gong:chartData.gongs[6], label:&quot;未&quot;}, // pos 0,2
+    {gong:chartData.gongs[7], label:&quot;申&quot;}, // pos 0,3
+    {gong:chartData.gongs[3], label:&quot;辰&quot;}, // pos 1,0
+    {gong:null, label:&quot;center&quot;}, // pos 1,1 - CENTER
+    {gong:null, label:&quot;center2&quot;}, // pos 1,2 - CENTER
+    {gong:chartData.gongs[8], label:&quot;酉&quot;}, // pos 1,3
+    {gong:chartData.gongs[2], label:&quot;卯&quot;}, // pos 2,0
+    {gong:null, label:&quot;center3&quot;}, // pos 2,1
+    {gong:null, label:&quot;center4&quot;}, // pos 2,2
+    {gong:chartData.gongs[9], label:&quot;戌&quot;}, // pos 2,3
+    {gong:chartData.gongs[1], label:&quot;寅&quot;}, // pos 3,0
+    {gong:chartData.gongs[11], label:&quot;丑&quot;}, // pos 3,1
+    {gong:chartData.gongs[10], label:&quot;子&quot;}, // pos 3,2
+    {gong:chartData.gongs[0], label:&quot;亥&quot;}, // pos 3,3 - wait, let me reorder
+  ];
+
+  // Actually, let me use a cleaner approach - traditional layout:
+  // 巳 午 未 申
+  // 辰     酉
+  // 卯     戌
+  // 寅 丑 子 亥
+  const palaceOrder = [
+    chartData.gongs[5], chartData.gongs[6], chartData.gongs[7], chartData.gongs[8], // 巳午未申
+    chartData.gongs[4], null, null, chartData.gongs[9],                        // 辰--酉
+    chartData.gongs[3], null, null, chartData.gongs[10],                       // 卯--戌
+    chartData.gongs[2], chartData.gongs[1], chartData.gongs[0], chartData.gongs[11], // 寅丑子亥
+  ];
+
+  // Wait, let me re-check. The data from the calculator:
+  // gongs[0]=命宫(戌), [1]=兄弟(酉), [2]=夫妻(申), [3]=子女(未), [4]=财帛(午),
+  // [5]=疾厄(巳), [6]=迁移(辰), [7]=交友(卯), [8]=官禄(寅), [9]=田宅(丑),
+  // [10]=福德(子), [11]=父母(亥)
+
+  // Traditional display (地支 order 巳午未申/辰--酉/卯--戌/寅丑子亥):
+  // 巳=疾厄[5]  午=财帛[4]  未=子女[3]  申=夫妻[2]
+  // 辰=迁移[6]                          酉=兄弟[1]
+  // 卯=交友[7]                          戌=命宫[0]
+  // 寅=官禄[8]  丑=田宅[9]  子=福德[10] 亥=父母[11]
+
+  const display = [
+    chartData.gongs[5], chartData.gongs[4], chartData.gongs[3], chartData.gongs[2],
+    chartData.gongs[6], null, null, chartData.gongs[1],
+    chartData.gongs[7], null, null, chartData.gongs[0],
+    chartData.gongs[8], chartData.gongs[9], chartData.gongs[10], chartData.gongs[11],
+  ];
+
+  grid.style.gridTemplateColumns = &#x27;repeat(4, 1fr)&#x27;;
+
+  display.forEach((g, i) =&gt; {
+    const div = document.createElement(&#x27;div&#x27;);
+    if (g === null) {
+      // Center - 命宫 info
+      div.className = &#x27;palace&#x27;;
+      div.style.cssText = &#x27;background:transparent;border:1px dashed #2a2a3a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:130px;&#x27;;
+      div.innerHTML = `
+        &lt;div style=&quot;text-align:center;color:#c9a96e;font-size:1.1em;font-weight:700;&quot;&gt;☯ 紫微斗数&lt;/div&gt;
+        &lt;div style=&quot;text-align:center;color:#666;font-size:0.75em;margin-top:6px;&quot;&gt;命宫 · 戌&lt;br&gt;身宫 · 戌&lt;br&gt;金四局&lt;/div&gt;
+        &lt;div style=&quot;text-align:center;color:#888;font-size:0.65em;margin-top:4px;&quot;&gt;紫微在未&lt;/div&gt;
+      `;
+    } else {
+      const isEmpty = g.major.length === 0;
+      div.className = &#x27;palace&#x27; + (isEmpty ? &#x27; empty&#x27; : &#x27;&#x27;);
+      div.onclick = () =&gt; showPalaceDetail(g);
+
+      let html = `&lt;div class=&quot;palace-title&quot;&gt;${g.name}&lt;/div&gt;`;
+      html += `&lt;div class=&quot;palace-zhi&quot;&gt;${g.gan}${g.zhi}&lt;/div&gt;`;
+
+      // Major stars
+      if (g.major.length &gt; 0) {
+        html += &#x27;&lt;div class=&quot;star-row&quot;&gt;&#x27;;
+        g.major.forEach(s =&gt; {
+          const miaoTxt = s.miao ? &#x27;&lt;span class=&quot;star-miao-mark&quot;&gt;◎&lt;/span&gt;&#x27; : &#x27;&lt;span class=&quot;star-xian-mark&quot;&gt;△&lt;/span&gt;&#x27;;
+          html += `&lt;span class=&quot;star-tag star-major&quot; onclick=&quot;event.stopPropagation();showStarDetail(&#x27;${s.name}&#x27;)&quot;&gt;${miaoTxt}${s.name}&lt;/span&gt;`;
+        });
+        html += &#x27;&lt;/div&gt;&#x27;;
+      } else {
+        html += &#x27;&lt;div class=&quot;star-row&quot;&gt;&lt;span style=&quot;color:#555;font-size:0.7em;&quot;&gt;(空宫 · 借对宫)&lt;/span&gt;&lt;/div&gt;&#x27;;
+      }
+
+      // Aux stars
+      if (g.aux.length &gt; 0) {
+        html += &#x27;&lt;div class=&quot;star-row&quot;&gt;&#x27;;
+        g.aux.forEach(s =&gt; {
+          const cls = s.type === &#x27;吉&#x27; ? &#x27;star-ji&#x27; : s.type === &#x27;煞&#x27; ? &#x27;star-sha&#x27; : &#x27;star-za&#x27;;
+          html += `&lt;span class=&quot;star-tag ${cls}&quot; onclick=&quot;event.stopPropagation();showStarDetail(&#x27;${s.name}&#x27;)&quot;&gt;${s.name}&lt;/span&gt;`;
+        });
+        html += &#x27;&lt;/div&gt;&#x27;;
+      }
+
+      // Si hua
+      if (g.sihua.length &gt; 0) {
+        html += &#x27;&lt;div class=&quot;si-row&quot;&gt;&#x27;;
+        g.sihua.forEach(sh =&gt; {
+          html += `&lt;span class=&quot;star-tag star-si&quot; onclick=&quot;event.stopPropagation();showStarDetail(&#x27;${sh.star}&#x27;)&quot;&gt;${sh.hua}&lt;/span&gt;`;
+        });
+        html += &#x27;&lt;/div&gt;&#x27;;
+      }
+
+      html += `&lt;div class=&quot;dx-tag&quot;&gt;📅 ${g.dx || &#x27;&#x27;}&lt;/div&gt;`;
+      div.innerHTML = html;
+    }
+    grid.appendChild(div);
+  });
+}
+
+// ============================================================
+// MODAL: Star Detail
+// ============================================================
+function showStarDetail(starName) {
+  const star = starDB[starName];
+  const chartStar = chartData.allStars[starName];
+
+  if (!star &amp;&amp; !chartStar) return;
+
+  const modal = document.getElementById(&#x27;starModalContent&#x27;);
+  const overlay = document.getElementById(&#x27;starModal&#x27;);
+
+  let wxClass = &#x27;&#x27;;
+  const wx = star ? star.wx : &#x27;土&#x27;;
+  if (wx === &#x27;木&#x27;) wxClass = &#x27;wx-wood&#x27;;
+  else if (wx === &#x27;火&#x27;) wxClass = &#x27;wx-fire&#x27;;
+  else if (wx === &#x27;土&#x27;) wxClass = &#x27;wx-earth&#x27;;
+  else if (wx === &#x27;金&#x27;) wxClass = &#x27;wx-metal&#x27;;
+  else if (wx === &#x27;水&#x27;) wxClass = &#x27;wx-water&#x27;;
+
+  let html = `&lt;button class=&quot;modal-close&quot; onclick=&quot;closeModal()&quot;&gt;✕&lt;/button&gt;`;
+  html += `&lt;h3&gt;⭐ ${starName}&lt;/h3&gt;`;
+  html += `&lt;div class=&quot;star-meta&quot;&gt;`;
+  if (star) html += `&lt;span class=&quot;wx-tag ${wxClass}&quot;&gt;${star.wx || &#x27;&#x27;}&lt;/span&gt; `;
+  if (star) html += `&lt;span&gt;${star.cat || &#x27;&#x27;}&lt;/span&gt; · `;
+  if (chartStar) {
+    html += `所在：&lt;strong&gt;${chartStar.gong}&lt;/strong&gt;（${chartStar.gongZhi}）`;
+    if (chartStar.miao !== undefined) html += ` · &lt;span style=&quot;color:${chartStar.miao ? &#x27;var(--miao)&#x27; : &#x27;var(--xian)&#x27;}&quot;&gt;${chartStar.miao ? &#x27;◎ 庙旺&#x27; : &#x27;△ 利陷&#x27;}&lt;/span&gt;`;
+  }
+  html += `&lt;/div&gt;`;
+
+  // Role
+  if (star &amp;&amp; star.role) {
+    html += `&lt;h4&gt;🎯 定位&lt;/h4&gt;`;
+    html += `&lt;div class=&quot;influence&quot;&gt;${star.role}&lt;/div&gt;`;
+  }
+
+  // Description
+  if (star &amp;&amp; star.desc) {
+    html += `&lt;h4&gt;📖 详解&lt;/h4&gt;`;
+    html += `&lt;div class=&quot;influence&quot;&gt;${star.desc}&lt;/div&gt;`;
+  }
+
+  // Calculation method
+  html += `&lt;h4&gt;🔢 安星算法（它是怎么算出来的）&lt;/h4&gt;`;
+  html += `&lt;div class=&quot;calc-steps&quot;&gt;`;
+  if (star &amp;&amp; star.calc) {
+    html += `&lt;div class=&quot;step formula&quot;&gt;${star.calc}&lt;/div&gt;`;
+  } else if (chartStar &amp;&amp; chartStar.type === &#x27;major&#x27;) {
+    html += `&lt;div class=&quot;step formula&quot;&gt;此星为紫微斗数十四主星之一，根据紫微星在未宫通过固定偏移排列。&lt;/div&gt;`;
+  } else {
+    html += `&lt;div class=&quot;step&quot;&gt;此星根据年支/年干/月/时通过紫微斗数安星法则计算得出。&lt;/div&gt;`;
+  }
+  html += `&lt;/div&gt;`;
+
+  // Influence in current palace
+  if (chartStar &amp;&amp; chartStar.gong) {
+    html += `&lt;h4&gt;📍 在「${chartStar.gong}」的影响&lt;/h4&gt;`;
+    html += `&lt;div class=&quot;influence&quot;&gt;`;
+    html += getStarInPalaceInfluence(starName, chartStar.gong, chartStar);
+    html += `&lt;/div&gt;`;
+  }
+
+  // Calculator output reference
+  html += `&lt;h4&gt;📊 计算器输出&lt;/h4&gt;`;
+  html += `&lt;div class=&quot;calc-steps&quot;&gt;`;
+  html += `&lt;div class=&quot;step&quot;&gt;星名: ${starName}&lt;/div&gt;`;
+  if (chartStar) {
+    html += `&lt;div class=&quot;step&quot;&gt;所在宫位: ${chartStar.gong}（${chartStar.gongZhi}）&lt;/div&gt;`;
+    html += `&lt;div class=&quot;step&quot;&gt;五行: ${star ? star.wx : (chartStar.wx || &#x27;未知&#x27;)}&lt;/div&gt;`;
+    if (chartStar.miao !== undefined) html += `&lt;div class=&quot;step&quot;&gt;庙旺状态: ${chartStar.miao ? &#x27;庙旺&#x27; : &#x27;利陷&#x27;}&lt;/div&gt;`;
+  }
+  html += `&lt;/div&gt;`;
+
+  modal.innerHTML = html;
+  overlay.classList.add(&#x27;show&#x27;);
+
+  // Close on overlay click
+  overlay.onclick = function(e) { if (e.target === overlay) closeModal(); };
+}
+
+function getStarInPalaceInfluence(starName, gongName, chartStar) {
+  const infl = {
+    &quot;紫微&quot;:{子女宫:&quot;紫微在子女宫 + 天相 → \&quot;紫相同宫\&quot;。子女尊贵体面，有领导气质。化科更是锦上添花——子女有名声、有学识。晚年（79-88岁大限在子女宫）享受子女带来的尊荣。&quot;},
+    &quot;天机&quot;:{财帛宫:&quot;天机化禄在财帛宫 → \&quot;智禄\&quot;。靠头脑赚钱的最强配置。加左辅 → 有贵人搭线给财路。加火星 → 钱来得快去得也快，需控制冲动投资。巨门同宫 → 说话/沟通也是财源之一。&quot;},
+    &quot;太阳&quot;:{迁移宫:&quot;太阳在迁移宫庙旺 → 在外形象光辉。女命太阳在迁移 → 有事业心和社交能力。但太阴同宫化忌 → \&quot;日月并明\&quot;被破，表面风光下藏着不安。&quot;},
+    &quot;武曲&quot;:{交友宫:&quot;武曲+天府+禄存 → \&quot;武府同宫\&quot;加禄存，顶级的财富朋友圈。身边人有实力、有财力，且能给你带来实际利益。&quot;},
+    &quot;天同&quot;:{官禄宫:&quot;天同在官禄宫庙旺 → 事业不走荆棘路。适合轻松型职业。加擎羊 → 安逸中偶有争斗，擎羊逼着你去争，但你本性不爱争——这是事业宫的核心矛盾。&quot;},
+    &quot;廉贞&quot;:{父母宫:&quot;廉贞在父母宫庙旺 → 父母有社会地位或事业追求。与父母关系中夹杂事业期望或压力。&quot;},
+    &quot;天府&quot;:{交友宫:&quot;天府+武曲+禄存 → 朋友圈即\&quot;财库\&quot;。天府为库星，把武曲的财和禄存的禄都\&quot;存\&quot;在交友宫——你身边就是一座金库。&quot;},
+    &quot;太阴&quot;:{迁移宫:&quot;太阴化忌在迁移宫 → 此盘最大的情绪痛点。太阴主情感、女性。在外容易受情感伤害，与女性关系处不好。但庙旺减轻了化忌的凶性——不是灭顶之灾，是挥之不去的隐痛。&quot;},
+    &quot;贪狼&quot;:{疾厄宫:&quot;贪狼在疾厄宫 → 健康与欲望挂钩。贪狼为桃花+欲望星，在疾厄需注意：纵欲伤身、暴饮暴食、情绪化饮食。铃星地空加重——慢性病+突发病的双重风险。&quot;},
+    &quot;巨门&quot;:{财帛宫:&quot;巨门在财帛宫 + 天机化禄 → \&quot;暗星化禄\&quot;。巨门主口舌是非，但在财帛宫反而把\&quot;暗\&quot;转化为了生财工具——靠嘴吃饭（销售、顾问、法律）。&quot;},
+    &quot;天相&quot;:{子女宫:&quot;天相在子女宫 + 紫微 → \&quot;紫相同宫\&quot;。天相是辅佐星，配合紫微的帝王气质——子女不仅有出息，还懂得配合协作，不是独断专行的那种。&quot;},
+    &quot;天梁&quot;:{夫妻宫:&quot;天梁庙旺化权 + 右弼天钺 → 这是本盘婚姻的最强保障。天梁为荫星，化权则坐实了\&quot;庇护\&quot;——配偶稳重有权威，且暗中帮助扶持你。双吉星加持 → 不是将就的婚姻，是有品质的婚姻。&quot;},
+    &quot;七杀&quot;:{兄弟宫:&quot;七杀庙旺在兄弟宫 + 地劫 → 兄弟姐妹中有性格刚强者，但地劫煞星暗示：与兄弟姐妹的缘分可能有波折（分离、矛盾、被连累）。&quot;},
+    &quot;破军&quot;:{田宅宫:&quot;破军庙旺在丑宫 → 家中变动多（搬家、翻修），但破军在丑为庙旺——变动中向好，不是越折腾越差。&quot;},
+    &quot;文昌&quot;:{迁移宫:&quot;文昌在迁移 → 在外以文书、学识见长。配合太阳太阴→ 对外沟通表达有文采、有说服力。&quot;},
+    &quot;文曲&quot;:{命宫:&quot;文曲独坐命宫（空宫）→ 命主有艺术细胞和审美力，但空宫让这些才能不容易\&quot;定型\&quot;表现出来——需要在大运引动时才会被激发。&quot;},
+    &quot;左辅&quot;:{财帛宫:&quot;左辅在财帛 + 天机化禄 → 赚钱路上有人带。左辅是\&quot;明面上的贵人\&quot;，说明你赚钱时能得到公开的帮助和资源。&quot;},
+    &quot;右弼&quot;:{夫妻宫:&quot;右弼在夫妻宫 + 天梁化权 → 配偶在暗处为你铺路。右弼是\&quot;暗中的贵人\&quot;——你配偶帮你做了很多你不知道的事。&quot;},
+    &quot;天魁&quot;:{福德宫:&quot;天魁在福德宫（空宫）→ 内心世界虽简单但不孤单，关键时刻总有天上掉下来的贵人提点你。&quot;},
+    &quot;天钺&quot;:{夫妻宫:&quot;天钺在夫妻宫 + 天梁化权 + 右弼 → 三重吉星汇聚夫妻宫。配偶自带贵人光环，可能是通过长辈/权威人士介绍认识的。&quot;},
+    &quot;禄存&quot;:{交友宫:&quot;禄存在交友宫 + 武曲天府 → 朋友圈给你实在好处。禄存是\&quot;真金白银的禄\&quot;——朋友帮你不是嘴上说说，是真给你资源和机会。&quot;},
+    &quot;擎羊&quot;:{官禄宫:&quot;擎羊在官禄宫 → 职场有明面上的竞争、冲突。擎羊是\&quot;明刀明枪\&quot;——你的事业路上不平静，总有人和你抢。但擎羊（禄存前一位）也暗示：富贵险中求。&quot;},
+    &quot;陀罗&quot;:{迁移宫:&quot;陀罗在迁移 + 太阴化忌 → 化忌效果被放大。迁移中的麻烦不是一次性的，是反复纠缠。外出/远行/换环境时需特别注意。&quot;},
+    &quot;火星&quot;:{财帛宫:&quot;火星在财帛 → 钱财来得快、去得也快。突发性的财务波动。天机化禄遇火星 → 赚钱时有机遇爆发，但也要守住成果。&quot;},
+    &quot;铃星&quot;:{疾厄宫:&quot;铃星在疾厄 + 贪狼 → 慢性隐患。贪狼的\&quot;欲\&quot;遇上铃星的\&quot;慢火煎熬\&quot;——健康是被一点点消耗的，不是突然垮掉。需长期养生调理。&quot;},
+    &quot;地空&quot;:{疾厄宫:&quot;地空在疾厄 → 健康出问题时往往来得突然。地空+贪狼 → 突发性肝胆/生殖系统问题风险。&quot;},
+    &quot;地劫&quot;:{兄弟宫:&quot;地劫在兄弟宫 + 七杀 → 兄弟关系中的\&quot;劫\&quot;——可能被兄弟姐妹拖累，或因兄弟姐妹而损失。&quot;},
+    &quot;天马&quot;:{疾厄宫:&quot;天马在疾厄 → 健康问题与过度奔波劳累相关。天马+贪狼 → 因欲望驱动而奔波劳碌，身体被透支。&quot;},
+  };
+  return infl[starName]?.[gongName] || `「${starName}」在「${gongName}」的影响需结合三方四正和四化综合判断。`;
+}
+
+function showPalaceDetail(gong) {
+  const modal = document.getElementById(&#x27;starModalContent&#x27;);
+  const overlay = document.getElementById(&#x27;starModal&#x27;);
+  let html = `&lt;button class=&quot;modal-close&quot; onclick=&quot;closeModal()&quot;&gt;✕&lt;/button&gt;`;
+  html += `&lt;h3&gt;🏛 ${gong.name}&lt;/h3&gt;`;
+  html += `&lt;div class=&quot;star-meta&quot;&gt;${gong.gan}${gong.zhi} · 大限: ${gong.dx} · 三方四正: ${gong.tris.he1} / ${gong.tris.dui} / ${gong.tris.he2}&lt;/div&gt;`;
+
+  html += `&lt;h4&gt;🌟 宫内星曜&lt;/h4&gt;`;
+  if (gong.major.length === 0 &amp;&amp; gong.aux.length === 0) {
+    html += `&lt;div class=&quot;influence&quot;&gt;&lt;span style=&quot;color:#666&quot;&gt;空宫 — 需借对宫「${gong.tris.dui}」的星曜来理解此宫&lt;/span&gt;&lt;/div&gt;`;
+  }
+  gong.major.forEach(s =&gt; {
+    const miao = s.miao ? &#x27;◎ 庙旺&#x27; : &#x27;△ 利陷&#x27;;
+    html += `&lt;div class=&quot;influence&quot; style=&quot;cursor:pointer;color:var(--gold)&quot; onclick=&quot;showStarDetail(&#x27;${s.name}&#x27;)&quot;&gt;⭐ ${s.name} ${miao} → 点击查看详情&lt;/div&gt;`;
+  });
+  gong.aux.forEach(s =&gt; {
+    html += `&lt;div class=&quot;influence&quot; style=&quot;cursor:pointer;color:#888&quot; onclick=&quot;showStarDetail(&#x27;${s.name}&#x27;)&quot;&gt;· ${s.name} (${s.type}) → 点击查看详情&lt;/div&gt;`;
+  });
+  gong.sihua.forEach(sh =&gt; {
+    html += `&lt;div class=&quot;influence&quot; style=&quot;color:var(--blue)&quot;&gt;🔄 ${sh.hua} → 对应星曜「${sh.star}」&lt;/div&gt;`;
+  });
+
+  html += `&lt;h4&gt;📐 宫位推导&lt;/h4&gt;`;
+  html += `&lt;div class=&quot;calc-steps&quot;&gt;`;
+  html += `&lt;div class=&quot;step formula&quot;&gt;命宫在戌 → 从寅宫起正月（顺数至农历三月）→ 再从该宫起子时（逆数至午时）→ 得命宫在戌&lt;/div&gt;`;
+  html += `&lt;div class=&quot;step formula&quot;&gt;宫干: 乙卯年生 → 五虎遁 → 寅宫起丙寅 → 戌宫为丙戌&lt;/div&gt;`;
+  html += `&lt;div class=&quot;step&quot;&gt;此宫是十二宫标准排列的第${chartData.gongs.indexOf(gong)+1}宫&lt;/div&gt;`;
+  html += `&lt;/div&gt;`;
+
+  html += `&lt;h4&gt;🔗 三方四正会照&lt;/h4&gt;`;
+  html += `&lt;div class=&quot;calc-steps&quot;&gt;`;
+  html += `&lt;div class=&quot;step&quot;&gt;对宫（${gong.tris.dui}）：相隔6宫，直接对冲影响&lt;/div&gt;`;
+  html += `&lt;div class=&quot;step&quot;&gt;三合宫1（${gong.tris.he1}）：每隔4宫的三合方位&lt;/div&gt;`;
+  html += `&lt;div class=&quot;step&quot;&gt;三合宫2（${gong.tris.he2}）：另一个三合方位&lt;/div&gt;`;
+  html += `&lt;/div&gt;`;
+
+  modal.innerHTML = html;
+  overlay.classList.add(&#x27;show&#x27;);
+  overlay.onclick = function(e) { if (e.target === overlay) closeModal(); };
+}
+
+function closeModal() {
+  document.getElementById(&#x27;starModal&#x27;).classList.remove(&#x27;show&#x27;);
+}
+
+// ============================================================
+// RENDER ANALYSIS (collapsible sections)
+// ============================================================
+function renderAnalysis() {
+  const container = document.getElementById(&#x27;analysisContent&#x27;);
+  const sections = [
+    {id:&#x27;b1&#x27;,title:&#x27;🏛 命宫核心分析&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：命宫在戌，无主星（空宫），仅文曲独坐。身宫与命宫同宫。迁移宫太阳太阴庙旺同宫，太阴化忌。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：「命宫无主星谓之空宫，借对宫迁移宫为用」。身命同宫 → 先天后天重心一致。日月同宫在辰戌为「日月并明」格。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：此人核心人格不由&quot;我是谁&quot;定义，而由&quot;我在外面是什么样&quot;来定义。外表阳光热情（借太阳），内心细腻敏感（借太阴），但太阴化忌让这种敏感带上了一层忧愁底色。一生最大的课题是&quot;自我认同&quot;。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b2&#x27;,title:&#x27;💑 夫妻宫 · 天梁化权 + 双吉星&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：夫妻宫在申，天梁庙旺化权，加右弼、天钺双吉星。三方四正会照迁移宫（日月）、福德宫（天魁）。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：天梁为&quot;荫星&quot;——主庇护、稳重、年长。化权则坐实了主导性。右弼为暗中贵人、天钺为权威贵人。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：配偶稳重有担当，可能年长，在家中掌话语权。右弼天钺暗示：配偶在暗处为你铺路，且可能是通过长辈/权威介绍认识的。这是&quot;嫁得好&quot;的盘面信号——与八字&quot;夫星极弱&quot;的结论互补：八字说的是你自身火旺压夫的问题，紫微说的是配偶本身不差。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b3&#x27;,title:&#x27;💰 财帛宫 · 天机化禄 + 巨门&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：财帛宫在午，天机化禄、巨门同宫，加左辅吉星、火星煞星。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：天机化禄为&quot;智禄&quot;——靠脑子赚钱而不是卖体力。巨门主口才、沟通——&quot;暗星化禄&quot;反为妙。左辅是明面贵人，火星主突发。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：适合靠脑子和嘴巴吃饭——咨询、策划、销售、培训。有贵人带路。但火星在财帛 → 钱来得快也去得快，需注意冲动投资。一生不愁吃穿（化禄在财帛是顶级信号）。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b4&#x27;,title:&#x27;⚠️ 迁移宫 · 日月同宫 + 太阴化忌&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：迁移宫在辰，太阳太阴庙旺同宫（日月并明），文昌、陀罗加会，太阴化忌。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：日月同宫在辰戌为&quot;日月并明&quot;——名声在外、受欢迎。但太阴化忌 → 月亮被遮。陀罗 → 迁移中遇拖延纠缠。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：此盘最大的矛盾点！明明有&quot;出名&quot;的潜质（日月并明为吉格），但化忌让每次外出/变动都伴随情绪受伤。太阴化忌也暗示与女性在外相处容易有矛盾。不宜频繁换城市、出国发展需三思。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b5&#x27;,title:&#x27;🫁 疾厄宫 · 贪狼 + 铃星地空&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：疾厄宫在巳，贪狼坐守，加铃星（煞）、地空（煞）、天马。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：贪狼属木，主肝胆、生殖系统、欲望。铃星为慢性煎熬，地空为突然中断，天马为奔波劳碌。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：健康有双重风险——铃星的&quot;慢耗&quot;（慢性病）+ 地空的&quot;突发&quot;（急症）。贪狼在疾厄 → 特别注意：肝胆问题、生殖/泌尿系统、因欲望（饮食/情欲/情绪）导致的健康消耗。天马 → 劳累奔波加重病情。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b6&#x27;,title:&#x27;👨‍👩‍👧 子女宫 · 紫相同宫 + 化科&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：子女宫在未，紫微（帝星）+ 天相（印星）同宫庙旺，紫微化科。全盘最尊贵的配置在子女宫。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：紫微为帝王星，天相为辅佐印星。&quot;紫相同宫&quot;在子女宫 → 后代有社会地位。化科加强名声。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：子女运势极好——孩子争气、成龙成凤。晚年（79-88岁大限走子女宫）生活品质很高，很大程度依赖子女的成就。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b7&#x27;,title:&#x27;🤝 交友宫 · 武府同宫 + 禄存&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：交友宫在卯，武曲（财星）+ 天府（库星）庙旺同宫，禄存加会。仅次于子女宫的富贵配置。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：武曲为&quot;正财星&quot;、天府为&quot;财库星&quot;、禄存为&quot;实禄&quot;。三星汇聚交友宫 → 朋友圈即金库。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：你身边有实力派贵人。朋友不是只嘴上说说——是真能给你带来资源和财富的。需分辨：谁是真心帮你的武曲天府，谁只是借你的光的。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+    {id:&#x27;b8&#x27;,title:&#x27;🏢 官禄宫 · 天同 + 擎羊的矛盾&#x27;,content:`
+      &lt;div class=&quot;derivation&quot;&gt;
+        &lt;div class=&quot;obs&quot;&gt;🔍 观测：官禄宫在寅，天同（福星）庙旺，擎羊（煞星）同宫。&lt;/div&gt;
+        &lt;div class=&quot;principle&quot;&gt;📜 原理：天同主安逸、不爱争、享受过程。擎羊主竞争、冲突、明面上的伤害。福星配煞星 → &quot;逼着安逸人去战斗&quot;。&lt;/div&gt;
+        &lt;div class=&quot;conclusion&quot;&gt;💡 结论：适合不高压的事业（教育、文化、公务员、服务）。不适合高压竞争型行业。你本性想安逸，但擎羊让你不得不应对争斗——这是事业宫的核心矛盾。&lt;/div&gt;
+      &lt;/div&gt;
+    `},
+  ];
+
+  sections.forEach(sec =&gt; {
+    const div = document.createElement(&#x27;div&#x27;);
+    div.className = &#x27;analysis-section&#x27;;
+    div.innerHTML = `
+      &lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot;&gt;
+        &lt;h3&gt;${sec.title}&lt;/h3&gt;
+        &lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;analysis-body&quot;&gt;${sec.content}&lt;/div&gt;
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleAnalysis(header) {
+  header.classList.toggle(&#x27;open&#x27;);
+  header.nextElementSibling.classList.toggle(&#x27;open&#x27;);
+}
+
+// ============================================================
+// RENDER SI HUA TAB
+// ============================================================
+function renderSihua() {
+  const container = document.getElementById(&#x27;sihuaContent&#x27;);
+  const sihuaData = [
+    {hua:&quot;化禄&quot;,star:&quot;天机&quot;,gong:&quot;财帛宫(午)&quot;,color:&quot;green&quot;,desc:&quot;天机化禄为「智禄」——脑子就是钱袋子。生年化禄在财帛宫，是天生的\&quot;赚钱体质\&quot;，但不是躺着赚，是\&quot;算\&quot;出来的。天机主谋划变动，适合多线程赚钱模式。&quot;,principle:&quot;乙年：天机化禄。生年干乙 → 天机星被赋予化禄的能量。禄随忌走，需结合化忌来看禄的真正去向。&quot;},
+    {hua:&quot;化权&quot;,star:&quot;天梁&quot;,gong:&quot;夫妻宫(申)&quot;,color:&quot;#8b5cf6&quot;,desc:&quot;天梁化权在夫妻宫——配偶掌握婚姻中的\&quot;权力\&quot;。天梁为荫星化权 → 不是压迫你的权力，是保护你的权力。配偶可能是管理者/长者/权威人士。&quot;,principle:&quot;乙年：天梁化权。生年干乙 → 天梁星被赋予化权的能量。权在夫妻宫→ 婚姻中有一方主导，不是你。&quot;},
+    {hua:&quot;化科&quot;,star:&quot;紫微&quot;,gong:&quot;子女宫(未)&quot;,color:&quot;#60a5fa&quot;,desc:&quot;紫微化科在子女宫——子女有名声、体面、学识。化科是\&quot;锦上添花\&quot;的星星——紫微本身就是帝星，再加化科，子女的体面程度翻倍。&quot;,principle:&quot;乙年：紫微化科。生年干乙 → 紫微星被赋予化科的能量。科在子女宫→ 子女是你的\&quot;门面\&quot;，替你争光。&quot;},
+    {hua:&quot;化忌&quot;,star:&quot;太阴&quot;,gong:&quot;迁移宫(辰)&quot;,color:&quot;#e85d75&quot;,desc:&quot;太阴化忌在迁移宫——此盘人生的最大课题。太阴主情感、女性、细腻。化忌 → 这些能量被阻塞。在迁移宫 → 外出/远行/换环境时最容易触发情绪创伤。与女性（长辈/同事/朋友）在外相处容易产生误会。&quot;,principle:&quot;乙年：太阴化忌。生年干乙 → 太阴星被赋予化忌的能量。忌为\&quot;执着、阻塞、反复\&quot;——化忌所在宫位是你此生绕不开的功课。太阴庙旺减轻了化忌的凶性——不是灭顶之灾，但终身的隐痛。&quot;},
+  ];
+
+  sihuaData.forEach(sh =&gt; {
+    const div = document.createElement(&#x27;div&#x27;);
+    div.className = &#x27;analysis-section&#x27;;
+    div.innerHTML = `
+      &lt;div class=&quot;analysis-header&quot; onclick=&quot;toggleAnalysis(this)&quot;&gt;
+        &lt;h3&gt;${sh.hua} · ${sh.star} &lt;span style=&quot;font-size:0.8em;color:#888&quot;&gt;在 ${sh.gong}&lt;/span&gt;&lt;/h3&gt;
+        &lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;analysis-body&quot;&gt;
+        &lt;div class=&quot;derivation&quot;&gt;
+          &lt;div class=&quot;obs&quot;&gt;🔍 观测：生年干乙 → ${sh.star}${sh.hua}，落在${sh.gong}&lt;/div&gt;
+          &lt;div class=&quot;principle&quot;&gt;📜 原理：${sh.principle}&lt;/div&gt;
+          &lt;div class=&quot;conclusion&quot;&gt;💡 解读：${sh.desc}&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ============================================================
+// RENDER DA XIAN TAB
+// ============================================================
+function renderDaxian() {
+  const container = document.getElementById(&#x27;daxianContent&#x27;);
+  const dxData = [
+    {age:&quot;9-18&quot;,gong:&quot;官禄宫(寅)&quot;,stars:&quot;天同◎ + 擎羊▲&quot;,note:&quot;求学阶段。天同轻松但擎羊竞争多——学校生活不平静，有竞争但天性不爱争。&quot;},
+    {age:&quot;19-28&quot;,gong:&quot;田宅宫(丑)&quot;,stars:&quot;破军◎&quot;,note:&quot;家中变动多——搬家、离家、家庭结构变化。破军在丑为庙旺，变动向好。&quot;},
+    {age:&quot;29-38&quot;,gong:&quot;福德宫(子)&quot;,stars:&quot;天魁☆ (空宫)&quot;,note:&quot;内心世界的重建期。空宫让你可以自由探索，天魁暗中护持。&quot;},
+    {age:&quot;39-48&quot;,gong:&quot;父母宫(亥)&quot;,stars:&quot;廉贞◎&quot;,note:&quot;事业上升期（廉贞主事业），父母相关事务增多。&quot;},
+    {age:&quot;49-58&quot;,gong:&quot;命宫(戌)&quot;,stars:&quot;空宫 + 文曲☆&quot;,note:&quot;⚡ 人生核心十年！大限入命宫——人生主题集中爆发期。文曲激活才艺，但空宫需借迁移日月化忌。&quot;},
+    {age:&quot;59-68&quot;,gong:&quot;兄弟宫(酉)&quot;,stars:&quot;七杀◎ + 地劫▲&quot;,note:&quot;兄弟姐妹相关事务。七杀果断，地劫波折，注意手足关系。&quot;},
+    {age:&quot;69-78&quot;,gong:&quot;夫妻宫(申)&quot;,stars:&quot;天梁◎化权 + 右弼天钺&quot;,note:&quot;婚姻协同期。天梁化权在夫妻宫大限——配偶影响力达到顶峰。&quot;},
+    {age:&quot;79-88&quot;,gong:&quot;子女宫(未)&quot;,stars:&quot;紫微◎天相◎ + 化科&quot;,note:&quot;晚年黄金期。紫相同宫在子女宫大限——享受子女成就带来的尊荣。&quot;},
+  ];
+
+  dxData.forEach(dx =&gt; {
+    const isMing = dx.gong.includes(&quot;命宫&quot;);
+    const div = document.createElement(&#x27;div&#x27;);
+    div.className = &#x27;analysis-section&#x27;;
+    div.innerHTML = `
+      &lt;div class=&quot;analysis-header ${isMing?&#x27;open&#x27;:&#x27;&#x27;}&quot; onclick=&quot;toggleAnalysis(this)&quot; style=&quot;${isMing?&#x27;border-color:var(--gold);&#x27;:&#x27;&#x27;}&quot;&gt;
+        &lt;h3&gt;${dx.age}岁 · ${dx.gong} ${isMing?&#x27;⚡&#x27;:&#x27;&#x27;}&lt;/h3&gt;
+        &lt;span class=&quot;arrow&quot;&gt;▼&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;analysis-body ${isMing?&#x27;open&#x27;:&#x27;&#x27;}&quot;&gt;
+        &lt;div class=&quot;derivation&quot;&gt;
+          &lt;div class=&quot;obs&quot;&gt;🔍 星曜：${dx.stars}&lt;/div&gt;
+          &lt;div class=&quot;conclusion&quot;&gt;💡 ${dx.note}&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ============================================================
+// TAB SWITCH
+// ============================================================
+function switchTab(tabName) {
+  document.querySelectorAll(&#x27;.section&#x27;).forEach(s =&gt; s.classList.remove(&#x27;active&#x27;));
+  document.querySelectorAll(&#x27;.tab-btn&#x27;).forEach(b =&gt; b.classList.remove(&#x27;active&#x27;));
+  document.getElementById(&#x27;tab-&#x27; + tabName).classList.add(&#x27;active&#x27;);
+  event.target.classList.add(&#x27;active&#x27;);
+}
+
+// ============================================================
+// GUIDE PANEL
+// ============================================================
+function toggleGuide() {
+  document.getElementById(&#x27;guidePanel&#x27;).classList.toggle(&#x27;open&#x27;);
+  document.getElementById(&#x27;guideOverlay&#x27;).classList.toggle(&#x27;show&#x27;);
+}
+// Auto-open guide on first visit
+window.addEventListener(&#x27;load&#x27;, function() {
+  setTimeout(function() {
+    document.getElementById(&#x27;guidePanel&#x27;).classList.add(&#x27;open&#x27;);
+    document.getElementById(&#x27;guideOverlay&#x27;).classList.add(&#x27;show&#x27;);
+  }, 600);
+});
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener(&#x27;keydown&#x27;, function(e) {
+  if (e.key === &#x27;Escape&#x27;) closeModal();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderSimpleSummary();
+renderPalaceGrid();
+renderAnalysis();
+renderSihua();
+renderDaxian();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;" style="width:100%;height:calc(100vh - 60px);border:none;"></iframe>
+</div>
+
+<div id="panel-combined" class="section-panel">
+<div class="combined-wrap">
+
+<div class="combined-header">
+  <h1>命运双鉴 · 综合交叉验证</h1>
+  <div class="subtitle">八字（子平术）× 紫微斗数 —— 两套独立体系互相印证</div>
+  <div style="margin-top:10px;color:#888;font-size:0.8em;">1975年4月30日 午时 · 女命 · 乙卯年</div>
+</div>
+
+<h2 style="color:var(--gold);margin-bottom:12px;font-size:1.1em;">📊 七维交叉验证表</h2>
+<table class="xref-table">
+  <tr><th></th><th>八字（子平术）</th><th>紫微斗数</th><th>一致性分析</th></tr>
+  <tr><td>💍<br>婚姻</td><td>正官癸水藏辰不透，水=0→夫星极弱。日坐羊刃双午自刑→压夫。</td><td>夫妻宫天梁+右弼, 天钺。天梁化权→配偶稳重有担当。</td><td><span class="conflict">⚡ 表面矛盾实则互补</span>——八字指根源（自身火旺压夫），紫微证配偶不差。<em>非嫁不到好人，是性格让好人也喘不过气</em>。</td></tr>
+<tr><td>💰<br>财运</td><td>月庚金偏财被木反克→辛苦求财。双午劫财夺财→破财风险。</td><td>财帛宫天机化禄+左辅→靠脑子赚钱，有贵人。火星→波动大。</td><td><span class="agree">✅ 一致</span>——双方确认：有机遇但存不住。需学会守财。</td></tr>
+<tr><td>🧠<br>性格</td><td>丙火帝旺+印星双透→火热直率+重情义。双午自刑→急躁纠结。</td><td>命宫空借日月→外表阳光内心敏感。身命同宫→追寻自我认同。</td><td><span class="agree">✅ 一致</span>——八字看表层行为，紫微看底层心理。</td></tr>
+<tr><td>🏥<br>健康</td><td>火=8极旺→心血管/失眠。水=0→肾脏/泌尿。金=2→呼吸道。</td><td>疾厄宫贪狼+铃星+地空→肝胆生殖。铃星=慢性，地空=突发。</td><td><span class="unique">🔵 互补</span>——八字侧重心肾，紫微侧重肝胆生殖。合起来是完整体检清单。</td></tr>
+<tr><td>✈️<br>外出</td><td>地支卯辰相害，无明确外出指示。</td><td>迁移宫日月同宫+太阴化忌→"日月并明被破"。外出易受伤。</td><td><span class="unique">🔵 紫微独到</span>——八字不足，紫微明确警告：不宜频繁换城市。</td></tr>
+<tr><td>👶<br>子女</td><td>时柱甲午坐羊刃帝旺→子女个性强。</td><td>子女宫紫微+天相+化科→全盘最尊贵配置。</td><td><span class="agree">✅ 一致</span>——双方都指向子女有出息有社会地位。</td></tr>
+<tr><td>⏳<br>转折</td><td>1岁起运。31-50金运→黄金期。51后忌神→守。</td><td>中年大限走父母宫+命宫→核心爆发期。</td><td><span class="agree">✅ 一致</span>——双方独立计算得出几乎一致的时间窗口。</td></tr>
+</table>
+
+<h2 style="color:var(--gold);margin:24px 0 12px;font-size:1.1em;">🎯 综合定论</h2>
+<div class="verdict-grid">
+
+  <div class="verdict-card" style="border-color:rgba(74,222,128,0.2);">
+    <h3>💍 婚姻</h3>
+    <div class="big-text text-ok">能嫁好，但要改自己</div>
+    <div class="detail">八字说你<em>压夫</em>（自身火太旺），紫微说你<em>配偶不差</em>（天梁化权+双吉星）。两者不矛盾——<em>对方没问题，出问题的是你的态度</em>。收敛强势、学会示弱、晚婚择稳重者，婚姻可转吉。</div>
+    <div class="source">八字：夫星弱 + 紫微：夫妻宫吉</div>
+  </div>
+
+  <div class="verdict-card" style="border-color:rgba(74,222,128,0.2);">
+    <h3>💰 财富</h3>
+    <div class="big-text text-good">脑力就是钱，但要学会守</div>
+    <div class="detail">八字偏财透+紫微天机化禄→双重确认<em>靠脑子赚钱</em>。但八字劫财+紫微火星→双重警告<em>财来财去</em>。赚得到但要存得住，拒绝亲友合伙。</div>
+    <div class="source">八字：偏财+劫财 ｜ 紫微：天机化禄+火星</div>
+  </div>
+
+  <div class="verdict-card" style="border-color:rgba(74,222,128,0.2);">
+    <h3>👶 子女</h3>
+    <div class="big-text text-good">孩子争气，晚年有靠</div>
+    <div class="detail">两个命理系统<em>最一致的正面结论</em>。八字时柱强旺+紫微紫相同宫化科→子女有出息、有体面。</div>
+    <div class="source">八字：时柱甲午旺 ｜ 紫微：紫相同宫化科</div>
+  </div>
+
+  <div class="verdict-card" style="border-color:rgba(232,93,117,0.2);">
+    <h3>🏥 健康</h3>
+    <div class="big-text text-warn">两条系统都亮红灯</div>
+    <div class="detail">八字火旺水缺→心血管+肾脏。紫微贪狼铃星地空→肝胆+慢性+突发。<em>你需要比普通人更注意身体</em>。少熬夜、管住嘴、定期体检不是建议，是刚需。</div>
+    <div class="source">八字：火8水0 ｜ 紫微：贪狼+铃星+地空</div>
+  </div>
+
+  <div class="verdict-card" style="border-color:rgba(139,92,246,0.2);">
+    <h3>✈️ 外出</h3>
+    <div class="big-text text-warn">少折腾，多扎根</div>
+    <div class="detail">八字对此领域信息不足，但<em>紫微给出了明确警告</em>：迁移宫太阴化忌→每次换环境都会触发情绪创伤。<em>不适合频繁大变动</em>。</div>
+    <div class="source">八字：信息不足 ｜ 紫微：迁移宫化忌（独到补充）</div>
+  </div>
+
+  <div class="verdict-card" style="border-color:rgba(96,165,250,0.2);">
+    <h3>⏳ 人生节奏</h3>
+    <div class="big-text text-ok">31-50岁拼，51后守</div>
+    <div class="detail">八字甲申乙酉金运用神发力，紫微中年大限走父母宫+命宫。两套系统独立计算得出<em>几乎一致的时间窗口</em>。</div>
+    <div class="source">八字：31-50金运 ｜ 紫微：中年命宫大限</div>
+  </div>
+
+</div>
+
+<div class="actions">
+  <h3 style="color:var(--gold);">📋 行动清单</h3>
+  <div class="action-list">
+    <div class="action-item"><span class="num">1</span><em>婚姻：</em>收敛主导欲、学会示弱。晚婚，择年长稳重之人。</div>
+    <div class="action-item"><span class="num">2</span><em>求财：</em>靠脑子和嘴巴赚钱，拒绝亲友合伙。金水行业优先。</div>
+    <div class="action-item"><span class="num">3</span><em>健康：</em>少熬夜、管住嘴、定期查心/肾/肝胆/妇科。</div>
+    <div class="action-item"><span class="num">4</span><em>出行：</em>不宜频繁换城市。远行前做足心理准备。</div>
+    <div class="action-item"><span class="num">5</span><em>方位：</em>工作居住选西方、北方。多用白黑蓝色。补金水。</div>
+    <div class="action-item"><span class="num">6</span><em>节奏：</em>31-50全力冲刺；51后转保守，保健康为主。</div>
+  </div>
+  <div style="text-align:center;color:#555;font-size:0.75em;margin-top:16px;">
+    ⚠️ 命理仅为传统民俗文化参考，人生走向取决于你自己的选择和努力。
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+function switchPanel(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

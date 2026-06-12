@@ -4,7 +4,7 @@
 用法: python generate_report.py <年> <月> <日> <时> <性别>
 输出: 自包含HTML文件
 """
-import sys, io, json, os
+import sys, io, json, os, re, html as html_mod
 try:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 except Exception:
@@ -60,7 +60,7 @@ def gen_bazi_html(bz):
         cards += card(c['title'], c['icon'], c['verdict'], c['vc'], c['reason'], '') + '\n'
 
     # --- Chart table ---
-    chart = '<table class="bzt"><tr><th></th><th>年柱</th><th>月柱</th><th>日柱</th><th>时柱</th></tr>'
+    chart = '<table class="pillars-table"><tr><th></th><th>年柱</th><th>月柱</th><th>日柱</th><th>时柱</th></tr>'
     for row_name, keys in [("天干",["天干","天干五行","天干十神"]),("地支",["地支","地支五行","藏干"]),("纳音",["纳音"]),("十二长生",["日主十二长生在此"])]:
         chart += f'<tr><td class="lbl">{row_name}</td>'
         for col in ["年柱","月柱","日柱","时柱"]:
@@ -654,64 +654,68 @@ def gen_narrative(bz, zw):
 # ═══════════════════════════════════════
 HTML = r'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>命运双鉴 __DATE__</title>
 <style>
-:root{--bg:#0f0f14;--card:#1a1a24;--c2:#222232;--t:#d4d4dc;--g:#c9a96e;--p:#8b5cf6;--r:#e85d75;--b:#60a5fa;--gr:#4ade80;--bd:#2a2a3a}
+:root{--bg:#0f0f14;--card:#1a1a24;--c2:#222232;--t:#d4d4dc;--g:#c9a96e;--p:#8b5cf6;--r:#e85d75;--b:#60a5fa;--gr:#4ade80;--bd:#2a2a3a;--wx-wood:#4ade80;--wx-fire:#f97316;--wx-earth:#a78b5a;--wx-metal:#e2e8a0;--wx-water:#38bdf8}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC','Microsoft YaHei',sans-serif;line-height:1.7;min-height:100vh}
-.nav{display:flex;background:#12121a;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100}
-.nav button{flex:1;padding:16px 10px;background:none;border:none;color:#777;cursor:pointer;font-size:1em;transition:all .25s;border-bottom:2px solid transparent;font-family:inherit;text-align:center}
-.nav button:hover{color:#aaa}.nav button.on{color:var(--g);border-bottom-color:var(--g);background:rgba(201,169,110,.04)}
-.nav button span{font-size:.65em;display:block;color:#555;margin-top:2px}.nav button.on span{color:var(--g)}
-.tab{display:none}.tab.on{display:block}
+.top-nav{display:flex;background:#12121a;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100}
+.nav-btn{flex:1;padding:16px 10px;background:none;border:none;color:#777;cursor:pointer;font-size:1em;transition:all .25s;border-bottom:2px solid transparent;font-family:inherit;text-align:center}
+.nav-btn:hover{color:#aaa}.nav-btn.on{color:var(--g);border-bottom-color:var(--g);background:rgba(201,169,110,.04)}
+.nav-btn .sub{font-size:.65em;display:block;color:#555;margin-top:2px}.nav-btn.on .sub{color:var(--g)}
+.section-panel{display:none}.section-panel.on{display:block}
 .wrap{max-width:1100px;margin:0 auto;padding:30px 20px 60px}
 
 /* HEADER */
-.hdr{text-align:center;padding:36px 20px;margin-bottom:36px;background:linear-gradient(135deg,rgba(201,169,110,.06),rgba(139,92,246,.06));border:1px solid var(--bd);border-radius:18px}
-.hdr h1{font-size:2em;background:linear-gradient(135deg,var(--g),#e2c98a,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hdr{text-align:center;padding:40px 20px;margin-bottom:36px;background:linear-gradient(135deg,rgba(201,169,110,.06),rgba(139,92,246,.06));border:1px solid var(--bd);border-radius:18px}
+.hdr h1{font-size:2.2em;background:linear-gradient(135deg,var(--g),#e2c98a,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
 .hdr .sub{color:#888;font-size:.9em}.hdr .meta{display:inline-block;margin-top:12px;padding:6px 18px;background:var(--card);border:1px solid var(--bd);border-radius:20px;color:#888;font-size:.82em}
-.sh{font-size:1.2em;color:var(--g);margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+.info-row{display:flex;justify-content:center;gap:16px;margin-top:14px;flex-wrap:wrap}
+.info-badge{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 14px;font-size:.85em}
+.info-badge span{color:var(--g);font-weight:600}
+.sh{font-size:1.2em;color:var(--g);margin:36px 0 14px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
 .box{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:8px}
 .green{color:var(--gr)}.red{color:var(--r)}.dim{color:#666}
 
 /* BAZI TABLE */
-.bzt{width:100%;border-collapse:collapse;margin-bottom:16px;border-radius:12px;overflow:hidden}
-.bzt th{background:#2F5496;color:#fff;padding:12px;font-size:.85em}.bzt td{padding:12px;background:var(--card);border:1px solid var(--bd);text-align:center;font-size:.88em}
-.bzt .gz.day-master{color:var(--g);font-weight:700;font-size:1.05em}.bzt .lbl{color:#888;font-size:.8em}
-.wx-d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
-.wx-bar{height:18px;border-radius:9px;display:flex;overflow:hidden;margin-bottom:6px}
-.wx-lab{display:flex;gap:14px;flex-wrap:wrap;font-size:.8em;color:#888;margin-bottom:16px}
+.pillars-table{width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:12px;overflow:hidden}
+.pillars-table th{background:#2F5496;color:#fff;padding:14px 12px;font-size:.9em;text-align:center}
+.pillars-table td{padding:12px;background:var(--card);border:1px solid var(--bd);text-align:center;font-size:.9em}
+.pillars-table .day-master{color:var(--g);font-weight:700;font-size:1.1em}
+.wx-d{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.wx-bar{height:20px;border-radius:10px;display:flex;overflow:hidden;margin-bottom:8px}
+.wx-lab{display:flex;gap:16px;flex-wrap:wrap;font-size:.82em;color:#888;margin-bottom:16px}
 
 /* VERDICT CARDS */
-.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
-.vc{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:24px 20px;transition:all .25s}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.vc{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:26px 22px;transition:all .25s;display:flex;flex-direction:column}
 .vc:hover{border-color:var(--g);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.vc .vc-icon{font-size:1.8em;margin-bottom:6px}
-.vc h3{font-size:1em;color:#bbb;margin-bottom:4px;font-weight:500}
-.vc .big{font-size:1.25em;font-weight:700;margin:6px 0 10px;line-height:1.3}
+.vc .vc-icon{font-size:2em;margin-bottom:8px}
+.vc h3{font-size:1.05em;color:#bbb;margin-bottom:6px;font-weight:500}
+.vc .big{font-size:1.35em;font-weight:700;margin:6px 0 12px;line-height:1.3}
 .big.good{color:var(--gr)}.big.warn{color:var(--r)}.big.ok{color:var(--g)}
-.vc .detail{color:#999;font-size:.82em;line-height:1.7}.vc .detail em{color:#ccc;font-style:normal;font-weight:600}
-.vc .source{font-size:.7em;color:#555;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}
+.vc .detail{color:#999;font-size:.84em;line-height:1.75}.vc .detail em{color:#ccc;font-style:normal;font-weight:600}
+.vc .source{font-size:.72em;color:#555;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd)}
 
 /* TAGS */
-.tg{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.75em;margin:2px}
+.tg{display:inline-block;padding:3px 10px;border-radius:6px;font-size:.75em;margin:2px}
 .tag-good{background:rgba(74,222,128,.1);color:var(--gr);border:1px solid rgba(74,222,128,.2)}
 .tag-bad{background:rgba(232,93,117,.1);color:var(--r);border:1px solid rgba(232,93,117,.2)}
 .tag-tip{background:rgba(96,165,250,.08);color:var(--b);border:1px solid rgba(96,165,250,.2)}
 
 /* FOLD */
-.fold{margin-bottom:8px}
-.fold-hd{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .25s}
-.fold-hd:hover{border-color:var(--g)}.fold-hd h3{font-size:.95em;color:#ddd}
+.fold{margin-bottom:10px}
+.fold-hd{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .25s}
+.fold-hd:hover{border-color:var(--g)}.fold-hd h3{font-size:1em;color:#ddd}
 .fold-hd .arr{transition:transform .3s;color:#666}.fold-hd.open .arr{transform:rotate(180deg)}
-.fold-bd{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--card);border-radius:0 0 10px 10px;padding:0 18px}
-.fold-bd.open{max-height:2000px;padding:14px 18px;border:1px solid var(--bd);border-top:0}
-.der{padding:10px 14px;margin:6px 0;border-radius:8px;background:rgba(139,92,246,.05);border-left:3px solid var(--p);font-size:.88em;line-height:1.8}
+.fold-bd{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--card);border-radius:0 0 10px 10px;padding:0 20px}
+.fold-bd.open{max-height:2000px;padding:16px 20px;border:1px solid var(--bd);border-top:0}
+.der{padding:12px 16px;margin:8px 0;border-radius:8px;background:rgba(139,92,246,.05);border-left:3px solid var(--p);font-size:.9em;line-height:1.8}
 .der-obs{color:var(--b)}.der-princ{color:var(--g)}.der-conc{color:#ddd}
 
 /* DAYUN */
-.dy-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.dy-s{flex:1;min-width:90px;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center;transition:all .25s}
+.dy-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.dy-s{flex:1;min-width:100px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;text-align:center;transition:all .25s}
 .dy-s:hover{border-color:var(--g)}.dy-s.dy-y{border-color:rgba(74,222,128,.3)}.dy-s.dy-j{border-color:rgba(232,93,117,.3)}
-.dy-a{font-size:.65em;color:#666}.dy-g{font-size:1em;color:var(--g);font-weight:600;margin:2px 0}
+.dy-a{font-size:.68em;color:#666}.dy-g{font-size:1.05em;color:var(--g);font-weight:600;margin:3px 0}
 
 /* ZIWEI GRID */
 .zw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px}
@@ -772,28 +776,28 @@ body{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC','
 @media(max-width:900px){.sum{grid-template-columns:repeat(2,1fr)}.act-list{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.sum{grid-template-columns:1fr}.act-list{grid-template-columns:1fr}.zw-grid{grid-template-columns:repeat(2,1fr)}.wrap{padding:16px 8px 40px}}
 </style></head><body>
-<div class="nav">
-  <button class="on" onclick="sw('bazi')">八字命盘<span>子平术</span></button>
-  <button onclick="sw('ziwei')">紫微斗数<span>星盘分析</span></button>
-  <button onclick="sw('dual')">双鉴总结<span>交叉验证</span></button>
+<div class="top-nav">
+  <button class="nav-btn on" onclick="sw('bazi')">八字命盘<span class="sub">子平术</span></button>
+  <button class="nav-btn" onclick="sw('ziwei')">紫微斗数<span class="sub">星盘分析</span></button>
+  <button class="nav-btn" onclick="sw('dual')">双鉴总结<span class="sub">交叉验证</span></button>
 </div>
 
 <!-- TAB 1: BAZI -->
-<div id="tb-bazi" class="tab on"><div class="wrap">
+<div id="tb-bazi" class="section-panel on"><div class="wrap">
 <div class="hdr"><h1>八字命盘 · 子平术</h1><div class="sub">Ba Zi · Four Pillars of Destiny</div><div class="meta">__BZ_DATE__ · __BZ_SEX__命 · __BZ_YEAR__年 · 日主 __BZ_RIGAN__(__BZ_RIWX__) · __BZ_SQ__</div></div>
 __BAZI_CONTENT__
 <div class="ft">⚠ 命理仅为传统民俗文化参考，人生走向取决于你自己的选择和努力。</div>
 </div></div>
 
 <!-- TAB 2: ZIWEI -->
-<div id="tb-ziwei" class="tab"><div class="wrap">
+<div id="tb-ziwei" class="section-panel"><div class="wrap">
 <div class="hdr"><h1>紫微斗数 · 星盘命理</h1><div class="sub">Zi Wei Dou Shu · Star Chart</div><div class="meta">__ZW_DATE__ · __ZW_SEX__命 · __ZW_YEAR__年 · 命宫__ZW_MING__ · 身宫__ZW_SHEN__ · __ZW_WXJ__</div></div>
 __ZIWEI_CONTENT__
 <div class="ft">⚠ 命理仅为传统民俗文化参考，人生走向取决于你自己的选择和努力。</div>
 </div></div>
 
 <!-- TAB 3: DUAL -->
-<div id="tb-dual" class="tab"><div class="wrap">
+<div id="tb-dual" class="section-panel"><div class="wrap">
 <div class="hdr"><h1>命运双鉴 · 综合交叉验证</h1><div class="sub">八字（子平术）× 紫微斗数 —— 两套独立命理体系互相印证</div><div class="meta">__DUAL_DATE__ · __DUAL_SEX__命 · __DUAL_YEAR__年</div></div>
 <div class="sh">📊 七维交叉验证表</div>
 <div class="xref"><table><tr><th></th><th>八字（子平术）</th><th>紫微斗数</th><th>一致性</th></tr>__CROSS_REF__</table></div>
@@ -827,7 +831,7 @@ __NARRATIVE__
   <div class="tip"><span class="n">8</span> 命理仅为<b>传统民俗文化参考</b>，不可全信。人生走向取决于你自己的选择和努力。</div>
 </div>
 <script>
-function sw(n){document.querySelectorAll('.nav button').forEach(function(b){b.classList.remove('on')});document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});document.getElementById('tb-'+n).classList.add('on');event.target.classList.add('on')}
+function sw(n){document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('on')});document.querySelectorAll('.section-panel').forEach(function(t){t.classList.remove('on')});document.getElementById('tb-'+n).classList.add('on');event.target.classList.add('on')}
 function toggleGuide(){document.getElementById('guidePanel').classList.toggle('open');document.getElementById('guideOverlay').classList.toggle('show')}
 setTimeout(function(){document.getElementById('guidePanel').classList.add('open');document.getElementById('guideOverlay').classList.add('show')},600)
 </script>
@@ -837,15 +841,120 @@ setTimeout(function(){document.getElementById('guidePanel').classList.add('open'
 # ═══════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════
+def wrap_standalone(title, content, extra_css=''):
+    """Wrap content as standalone HTML document"""
+    return f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>{title}</title><style>
+:root{{--bg:#0f0f14;--card:#1a1a24;--c2:#222232;--t:#d4d4dc;--g:#c9a96e;--p:#8b5cf6;--r:#e85d75;--b:#60a5fa;--gr:#4ade80;--bd:#2a2a3a;--wx-wood:#4ade80;--wx-fire:#f97316;--wx-earth:#a78b5a;--wx-metal:#e2e8a0;--wx-water:#38bdf8}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC','Microsoft YaHei',sans-serif;line-height:1.7;min-height:100vh}}
+.hdr{{text-align:center;padding:36px 20px;margin-bottom:30px;background:linear-gradient(135deg,rgba(201,169,110,.06),rgba(139,92,246,.06));border:1px solid var(--bd);border-radius:18px}}
+.hdr h1{{font-size:2em;background:linear-gradient(135deg,var(--g),#e2c98a,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}}
+.hdr .sub{{color:#888;font-size:.9em}}.hdr .meta{{display:inline-block;margin-top:12px;padding:6px 18px;background:var(--card);border:1px solid var(--bd);border-radius:20px;color:#888;font-size:.82em}}
+.sh{{font-size:1.2em;color:var(--g);margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}}
+.box{{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:8px}}
+.green{{color:var(--gr)}}.red{{color:var(--r)}}.dim{{color:#666}}
+.bzt{{width:100%;border-collapse:collapse;margin-bottom:16px;border-radius:12px;overflow:hidden}}
+.bzt th{{background:#2F5496;color:#fff;padding:12px;font-size:.85em}}.bzt td{{padding:12px;background:var(--card);border:1px solid var(--bd);text-align:center;font-size:.88em}}
+.bzt .day-master{{color:var(--g);font-weight:700;font-size:1.05em}}
+.wx-d{{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}}
+.wx-bar{{height:18px;border-radius:9px;display:flex;overflow:hidden;margin-bottom:6px}}
+.wx-lab{{display:flex;gap:14px;flex-wrap:wrap;font-size:.8em;color:#888;margin-bottom:16px}}
+.sum{{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}}
+.vc{{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:24px 20px;transition:all .25s}}
+.vc:hover{{border-color:var(--g);transform:translateY(-2px)}}
+.vc .vc-icon{{font-size:1.8em;margin-bottom:6px}}
+.vc h3{{font-size:1em;color:#bbb;margin-bottom:4px}}
+.vc .big{{font-size:1.25em;font-weight:700;margin:6px 0 10px}}
+.big.good{{color:var(--gr)}}.big.warn{{color:var(--r)}}.big.ok{{color:var(--g)}}
+.vc .detail{{color:#999;font-size:.82em;line-height:1.7}}.vc .detail em{{color:#ccc;font-style:normal;font-weight:600}}
+.vc .source{{font-size:.7em;color:#555;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}}
+.tg{{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.75em;margin:2px}}
+.tag-good{{background:rgba(74,222,128,.1);color:var(--gr);border:1px solid rgba(74,222,128,.2)}}
+.tag-bad{{background:rgba(232,93,117,.1);color:var(--r);border:1px solid rgba(232,93,117,.2)}}
+.tag-tip{{background:rgba(96,165,250,.08);color:var(--b);border:1px solid rgba(96,165,250,.2)}}
+.fold{{margin-bottom:8px}}
+.fold-hd{{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .25s}}
+.fold-hd:hover{{border-color:var(--g)}}.fold-hd h3{{font-size:.95em;color:#ddd}}
+.fold-hd .arr{{transition:transform .3s;color:#666}}.fold-hd.open .arr{{transform:rotate(180deg)}}
+.fold-bd{{max-height:0;overflow:hidden;transition:max-height .4s;background:var(--card);border-radius:0 0 10px 10px;padding:0 18px}}
+.fold-bd.open{{max-height:2000px;padding:14px 18px;border:1px solid var(--bd);border-top:0}}
+.dy-row{{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}}
+.dy-s{{flex:1;min-width:90px;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center;transition:all .25s}}
+.dy-s:hover{{border-color:var(--g)}}.dy-s.dy-y{{border-color:rgba(74,222,128,.3)}}.dy-s.dy-j{{border-color:rgba(232,93,117,.3)}}
+.dy-a{{font-size:.65em;color:#666}}.dy-g{{font-size:1em;color:var(--g);font-weight:600;margin:2px 0}}
+{extra_css}
+</style></head><body><div class="wrap">{content}</div></body></html>'''
+
 def generate(y, m, d, h, sex):
     bz = compute_bazi(y, m, d, h, sex)
     zw = compute_ziwei(y, m, d, h, sex)
 
-    # Bazi content
-    bazi_html = gen_bazi_html(bz)
+    # Generate standalone bazi HTML
+    bazi_standalone = wrap_standalone('八字命盘', gen_bazi_html(bz))
+    # Generate standalone ziwei HTML
+    ziwei_standalone = wrap_standalone('紫微斗数', gen_ziwei_html(zw),
+        '.zw-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px}}'
+        '.zw-p,.zw-c{{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;min-height:100px}}'
+        '.zw-p.empty{{opacity:.6}}.zw-ctr{{text-align:center;color:var(--g);font-size:.9em;font-weight:700;line-height:1.8}}'
+        '.zw-pn{{font-size:.75em;color:var(--g);font-weight:700;margin-bottom:4px}}.zw-pz{{float:right;color:#666;font-size:.7em}}'
+        '.st-mjr{{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.7em;color:var(--g);background:rgba(201,169,110,.1);border:1px solid rgba(201,169,110,.25)}}'
+        '.st-mjr.mi{{color:#f59e0b}}.st-ji{{color:var(--gr);font-size:.68em}}.st-sha{{color:var(--r);font-size:.68em}}.st-si{{color:var(--b);font-size:.68em;font-weight:700}}'
+        '.sh-ban{{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}}'
+        '.sh-c{{flex:1;min-width:160px;border-radius:10px;padding:14px;text-align:center;border:1px solid var(--bd)}}')
 
-    # Ziwei content
-    ziwei_html = gen_ziwei_html(zw)
+    bazi_escaped = html_mod.escape(bazi_standalone, quote=True)
+    ziwei_escaped = html_mod.escape(ziwei_standalone, quote=True)
+
+    # Load preferred wrapper template
+    tpl_path = os.path.join(os.path.dirname(BASE), 'assets', 'preferred_template.html')
+    with open(tpl_path, 'r', encoding='utf-8') as f:
+        wrapper = f.read()
+
+    # Replace srcdoc content
+    import re
+    # Find the two srcdoc iframes and replace their content
+    srcdoc_matches = list(re.finditer(r'srcdoc=\"', wrapper))
+    if len(srcdoc_matches) >= 2:
+        # Replace first srcdoc (bazi)
+        s1 = srcdoc_matches[0].end()
+        e1 = wrapper.find('\" style=\"width:', s1)
+        wrapper = wrapper[:s1] + bazi_escaped + wrapper[e1:]
+        # Re-find second srcdoc (positions shifted)
+        srcdoc_matches2 = list(re.finditer(r'srcdoc=\"', wrapper))
+        s2 = srcdoc_matches2[1].end()
+        e2 = wrapper.find('\" style=\"width:', s2)
+        wrapper = wrapper[:s2] + ziwei_escaped + wrapper[e2:]
+
+    # Replace hardcoded combined panel with dynamic content
+    ch_start = wrapper.find('<div class="combined-header">')
+    ch_end = wrapper.find('switchPanel', ch_start)
+    if ch_start > 0 and ch_end > 0:
+        combined_content = f'''<div class="combined-header">
+      <h1>命运双鉴 · 综合交叉验证</h1>
+      <div class="subtitle">八字（子平术）× 紫微斗数 —— 两套独立命理体系互相印证</div>
+      <div style="margin-top:10px;color:#888;font-size:0.8em;">{bz['输入']['公历']} · {bz['输入']['性别']}命 · {bz['四柱']['年柱']['干支']}年</div>
+    </div>
+    <h2 style="color:var(--gold);margin-bottom:12px;font-size:1.1em;">📊 七维交叉验证表</h2>
+    <table class="xref-table"><tr><th></th><th>八字（子平术）</th><th>紫微斗数</th><th>一致性分析</th></tr>
+    {gen_cross_ref(bz, zw)}
+    </table>
+    <h2 style="color:var(--gold);margin:24px 0 12px;font-size:1.1em;">🎯 综合定论</h2>
+    <div class="verdict-grid">
+    {gen_verdict_cards(bz, zw)}
+    </div>
+    {gen_narrative(bz, zw)}
+    <div class="actions"><h3 style="color:var(--gold);">📋 行动建议</h3>
+    <div class="action-list">'''
+        yong_str = ' · '.join(bz['用神分析']['用神'])
+        combined_content += f'''<div class="action-item"><span class="num">1</span><em>用神方向：</em>有利五行 <strong>{yong_str}</strong>。方位{' · '.join({'木':'东','火':'南','土':'中','金':'西','水':'北'}[w] for w in bz['用神分析']['用神'])}。颜色{' · '.join({'木':'青绿','火':'红紫','土':'黄棕','金':'白','水':'黑蓝'}[w] for w in bz['用神分析']['用神'])}。</div>
+    <div class="action-item"><span class="num">2</span><em>行业选择：</em>优先{yong_str}属性相关行业。</div>
+    <div class="action-item"><span class="num">3</span><em>健康管理：</em>定期体检，关注五行偏枯对应的脏腑。</div>
+    <div class="action-item"><span class="num">4</span><em>感情经营：</em>关注配偶星和配偶宫状态，主动经营关系。</div>
+    <div class="action-item"><span class="num">5</span><em>运势节奏：</em>用神运积极进取，忌神运保守稳健。</div>
+    <div class="action-item"><span class="num">6</span><em>理性看待：</em>命理为传统民俗文化参考，人生走向取决于自己的选择和努力。</div>
+    </div></div>
+    '''
+        wrapper = wrapper[:ch_start-1] + combined_content + wrapper[ch_end:]
 
     # Cross-ref & verdicts
     xref_html = gen_cross_ref(bz, zw)
@@ -868,27 +977,11 @@ def generate(y, m, d, h, sex):
     dirs_str = ' · '.join(dirs[w] for w in yong)
     colors_str = ' · '.join(colors[w] for w in yong)
 
-    # Build final HTML
-    html = HTML
-    replaces = {
-        '__DATE__': f'{y}.{m}.{d}',
-        '__BZ_DATE__': bz_date, '__BZ_SEX__': bz_sex, '__BZ_YEAR__': bz_year,
-        '__BZ_RIGAN__': bz_rigan, '__BZ_RIWX__': bz_riwx, '__BZ_SQ__': bz_sq,
-        '__BAZI_CONTENT__': bazi_html,
-        '__ZW_DATE__': zw_date, '__ZW_SEX__': zw_sex, '__ZW_YEAR__': zw_year,
-        '__ZW_MING__': zw_ming, '__ZW_SHEN__': zw_shen, '__ZW_WXJ__': zw_wxj,
-        '__ZIWEI_CONTENT__': ziwei_html,
-        '__DUAL_DATE__': dual_date, '__DUAL_SEX__': dual_sex, '__DUAL_YEAR__': dual_year,
-        '__CROSS_REF__': xref_html, '__VERDICTS__': verdict_html, '__NARRATIVE__': narrative_html,
-        '__YONG__': yong_str, '__DIRS__': dirs_str, '__COLORS__': colors_str,
-    }
-    for k, v in replaces.items():
-        html = html.replace(k, v)
-
+    # Save wrapper HTML with replaced srcdoc content
     fname = f'命运双鉴_{y}{m:02d}{d:02d}_{sex}.html'
     out = os.path.join(os.path.dirname(BASE), fname)
     with open(out, 'w', encoding='utf-8') as f:
-        f.write(html)
+        f.write(wrapper)
     return out
 
 
