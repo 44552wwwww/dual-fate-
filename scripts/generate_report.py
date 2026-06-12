@@ -1026,7 +1026,7 @@ def gen_bazi_html_v2(bz):
     # ── 模块3: 命理分析 ──
     analysis_html = ''
     for icon, title, content in _bazi_analysis_data(bz):
-        analysis_html += module_card(icon, title, f'<div style="color:#bbb;line-height:1.8">{content}</div>')
+        analysis_html += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{icon} {title}：</b>{content}</div>'
     mod3 = module_card('📋', '命理分析', analysis_html, True)
 
     # ── 模块4: 大运走势 ──
@@ -1042,7 +1042,8 @@ def gen_bazi_html_v2(bz):
     for d in dy['大运列表']:
         is_y = d['天干五行'] in yong; is_j = d['天干五行'] in ji
         note = f'{d["天干五行"]}为用神→此运顺遂' if is_y else (f'{d["天干五行"]}为忌神→此运多阻' if is_j else '平运')
-        dy_html += module_card('', f'{d["年龄段"]} · {d["干支"]} ({d["天干五行"]}+{d["地支五行"]})', f'<p style="color:#bbb">{note}</p>')
+        lc = 'var(--gr)' if is_y else ('var(--r)' if is_j else '#888')
+        dy_html += f'<div style="padding:8px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.8"><b style="color:{lc}">{d["年龄段"]} · {d["干支"]}</b>（{d["天干五行"]}+{d["地支五行"]}）—— {note}</div>'
     mod4 = module_card('⏳', '大运走势', dy_html)
 
     return mod1 + mod2 + mod3 + mod4
@@ -1113,7 +1114,7 @@ def gen_ziwei_html_v2(zw):
         aux = ', '.join(f'{s["星名"]}({s["类型"]})' for s in g['辅星']) or '无'
         si = ', '.join(s['化星'] for s in g['四化']) or '无'
         tris = f'对宫：{g["三方四正"]["对宫"]}，三合：{g["三方四正"]["三合1"]}、{g["三方四正"]["三合2"]}'
-        analysis_html += module_card('', f'{g["宫名"]} ({g["干支"]})', f'<p style="color:#bbb;line-height:1.8">主星：<em>{mjr}</em> | 辅星：{aux} | 四化：{si}<br>{tris}</p>')
+        analysis_html += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{g["宫名"]}（{g["干支"]}）：</b>主星 <em>{mjr}</em> · 辅星 {aux} · 四化 {si} · {tris}</div>'
     mod3 = module_card('📋', '命理分析', analysis_html, True)
 
     # ── 模块4: 四化飞星 ──
@@ -1132,7 +1133,7 @@ def gen_ziwei_html_v2(zw):
     for dx in zw['大限']['大限列表']:
         g = next((g for g in gongs if g['宫名']==dx['宫位']), None)
         stars = ', '.join(s['星名'] for s in g['主星']) if g and g['主星'] else '空宫'
-        dx_html += module_card('', f'{dx["年龄段"]} · {dx["宫位"]}({dx["地支"]})', f'<p style="color:#bbb">宫内：{stars}</p>')
+        dx_html += f'<div style="padding:8px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.8"><b style="color:var(--g)">{dx["年龄段"]}</b> · {dx["宫位"]}({dx["地支"]}) —— 宫内：{stars}</div>'
     mod5 = module_card('⏳', '大限走势', dx_html)
 
     return mod1 + mod2 + mod3 + mod4 + mod5
