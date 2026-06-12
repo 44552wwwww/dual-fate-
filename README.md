@@ -63,15 +63,15 @@
 
 ### 🔮 八字命盘标签
 
-![八字命盘](screenshot-bazi.png)
+![八字命盘](https://raw.githubusercontent.com/44552wwwww/dual-fate-/master/screenshot-bazi.png)
 
 ### 🌟 紫微斗数标签
 
-![紫微斗数](screenshot-ziwei.png)
+![紫微斗数](https://raw.githubusercontent.com/44552wwwww/dual-fate-/master/screenshot-ziwei.png)
 
 ### ⚖️ 双鉴总结标签
 
-![双鉴总结](screenshot-dual.png)
+![双鉴总结](https://raw.githubusercontent.com/44552wwwww/dual-fate-/master/screenshot-dual.png)
 
 ---
 
