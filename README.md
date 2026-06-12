@@ -61,6 +61,12 @@
 
 ---
 
+## 📸 截图预览
+
+| 🔮 八字命盘 | 🌟 紫微斗数 | ⚖️ 双鉴总结 |
+|:---:|:---:|:---:|
+| ![八字](https://raw.githubusercontent.com/44552wwwww/dual-fate-/master/bazi.png) | ![紫微](https://raw.githubusercontent.com/44552wwwww/dual-fate-/master/ziwei.png) | ![双鉴](https://raw.githubusercontent.com/44552wwwww/dual-fate-/master/dual.png) |
+
 ## 🚀 快速开始
 
 ```bash
