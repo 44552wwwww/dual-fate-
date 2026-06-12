@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+# Ignore generated report HTMLs, but keep screenshots
+命运双鉴_*.html
