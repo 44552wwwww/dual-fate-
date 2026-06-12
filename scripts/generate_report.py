@@ -650,8 +650,127 @@ def gen_narrative(bz, zw):
 
 
 # ═══════════════════════════════════════
-# TEMPLATE
 # ═══════════════════════════════════════
+# V2 TEMPLATE: Clean 3-tab layout, inline modules
+# ═══════════════════════════════════════
+HTML_V2 = r'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>命运双鉴 {date}</title>
+<style>
+:root{{--bg:#0f0f14;--card:#1a1a24;--c2:#222232;--t:#d4d4dc;--g:#c9a96e;--p:#8b5cf6;--r:#e85d75;--b:#60a5fa;--gr:#4ade80;--bd:#2a2a3a}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC','Microsoft YaHei',sans-serif;line-height:1.7;min-height:100vh}}
+.top-nav{{display:flex;background:#12121a;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100}}
+.nav-btn{{flex:1;padding:16px 10px;background:none;border:none;color:#777;cursor:pointer;font-size:1em;transition:all .25s;border-bottom:2px solid transparent;font-family:inherit;text-align:center}}
+.nav-btn:hover{{color:#aaa}}.nav-btn.on{{color:var(--g);border-bottom-color:var(--g);background:rgba(201,169,110,.04)}}
+.nav-btn .sub{{font-size:.65em;display:block;color:#555;margin-top:2px}}.nav-btn.on .sub{{color:var(--g)}}
+.panel{{display:none}}.panel.on{{display:block}}
+.wrap{{max-width:1100px;margin:0 auto;padding:24px 20px 60px}}
+.hdr{{text-align:center;padding:36px 20px;margin-bottom:28px;background:linear-gradient(135deg,rgba(201,169,110,.06),rgba(139,92,246,.06));border:1px solid var(--bd);border-radius:18px}}
+.hdr h1{{font-size:2em;background:linear-gradient(135deg,var(--g),#e2c98a,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}}
+.hdr .sub{{color:#888;font-size:.9em}}.hdr .meta{{display:inline-block;margin-top:12px;padding:6px 18px;background:var(--card);border:1px solid var(--bd);border-radius:20px;color:#888;font-size:.82em}}
+.badges{{display:flex;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}}
+.badge{{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:5px 12px;font-size:.82em}}
+.badge span{{color:var(--g);font-weight:600}}
+
+/* Module cards */
+.mod{{margin-bottom:12px}}
+.mod-hd{{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .25s}}
+.mod-hd:hover{{border-color:var(--g)}}
+.mod-icon{{font-size:1.2em}}.mod-hd span{{font-size:.95em;color:#ddd;flex:1}}
+.mod-arr{{color:#666;transition:transform .3s;font-size:.8em}}.mod-hd.open .mod-arr{{transform:rotate(180deg)}}
+.mod-bd{{max-height:0;overflow:hidden;transition:max-height .5s ease;background:var(--card);border-radius:0 0 12px 12px}}
+.mod-bd.open{{max-height:20000px;padding:16px 20px;border:1px solid var(--bd);border-top:0}}
+
+/* Summary cards */
+.sum{{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:8px}}
+.vc{{background:var(--c2);border:1px solid var(--bd);border-radius:14px;padding:22px 18px;transition:all .25s}}
+.vc:hover{{border-color:var(--g);transform:translateY(-2px)}}
+.vc-icon{{font-size:1.6em;margin-bottom:4px}}.vc h3{{font-size:.95em;color:#bbb;margin-bottom:4px}}
+.vc .big{{font-size:1.2em;font-weight:700;margin:6px 0 8px}}
+.big.good{{color:var(--gr)}}.big.warn{{color:var(--r)}}.big.ok{{color:var(--g)}}
+.vc .detail{{color:#999;font-size:.8em;line-height:1.6}}.vc .detail em{{color:#ccc;font-style:normal;font-weight:600}}
+.tg{{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.7em;margin:2px}}
+.tag-good{{background:rgba(74,222,128,.1);color:var(--gr);border:1px solid rgba(74,222,128,.2)}}
+.tag-bad{{background:rgba(232,93,117,.1);color:var(--r);border:1px solid rgba(232,93,117,.2)}}
+.tag-tip{{background:rgba(96,165,250,.08);color:var(--b);border:1px solid rgba(96,165,250,.2)}}
+
+/* Bazi table */
+.bzt{{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;margin-bottom:8px}}
+.bzt th{{background:#2F5496;color:#fff;padding:12px;font-size:.85em}}
+.bzt td{{padding:12px;background:var(--c2);border:1px solid var(--bd);text-align:center;font-size:.85em}}
+.bzt .day-master{{color:var(--g);font-weight:700;font-size:1.05em}}.bzt .lbl{{color:#888;font-size:.78em}}
+.wx-d{{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}}
+.wx-bar{{height:18px;border-radius:9px;display:flex;overflow:hidden;margin-bottom:6px}}
+.wx-lab{{display:flex;gap:14px;flex-wrap:wrap;font-size:.78em;color:#888;margin-bottom:12px}}
+.box{{background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:8px 0}}
+.green{{color:var(--gr)}}.red{{color:var(--r)}}.dim{{color:#666}}
+
+/* Dayun */
+.dy-row{{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}}
+.dy-s{{flex:1;min-width:85px;background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center;transition:all .25s}}
+.dy-s:hover{{border-color:var(--g)}}.dy-s.dy-y{{border-color:rgba(74,222,128,.3)}}.dy-s.dy-j{{border-color:rgba(232,93,117,.3)}}
+.dy-a{{font-size:.62em;color:#666}}.dy-g{{font-size:.95em;color:var(--g);font-weight:600;margin:2px 0}}
+
+/* Ziwei grid */
+.zw-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px}}
+.zw-p,.zw-c{{background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:10px;min-height:90px;font-size:.8em}}
+.zw-p.empty{{opacity:.5}}.zw-ctr{{text-align:center;color:var(--g);font-size:.85em;font-weight:700;line-height:1.8}}
+.zw-pn{{font-size:.7em;color:var(--g);font-weight:700;margin-bottom:3px}}.zw-pz{{float:right;color:#666;font-size:.65em}}
+.zw-st{{display:flex;flex-wrap:wrap;gap:1px;margin:2px 0}}
+.st-mjr{{display:inline-block;padding:1px 4px;border-radius:3px;font-size:.65em;color:var(--g);background:rgba(201,169,110,.1)}}.st-mjr.mi{{color:#f59e0b}}
+.st-ji{{font-size:.62em;color:var(--gr)}}.st-sha{{font-size:.62em;color:var(--r)}}.st-za{{font-size:.62em;color:#a78bfa}}
+.st-si{{font-size:.62em;color:var(--b);font-weight:700}}.zw-dx{{font-size:.6em;color:#666;margin-top:2px}}
+
+/* Sihua banner */
+.sh-ban{{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}}
+.sh-c{{flex:1;min-width:140px;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--bd)}}
+.sh-lu{{background:rgba(74,222,128,.05);border-color:rgba(74,222,128,.2)}}
+.sh-quan{{background:rgba(139,92,246,.05);border-color:rgba(139,92,246,.2)}}
+.sh-ke{{background:rgba(96,165,250,.05);border-color:rgba(96,165,250,.2)}}
+.sh-ji{{background:rgba(232,93,117,.05);border-color:rgba(232,93,117,.2)}}
+.sh-l{{font-size:1em;font-weight:700}}
+
+/* Cross-ref */
+.xref-wrap{{overflow-x:auto;margin-bottom:12px}}
+.xref-table{{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;font-size:.82em}}
+.xref-table th{{background:#2F5496;color:#fff;padding:10px;font-size:.82em}}
+.xref-table td{{padding:10px;background:var(--c2);border-bottom:1px solid var(--bd);vertical-align:top;line-height:1.5}}
+.xref-table tr td:first-child{{font-weight:700;color:var(--g);text-align:center;font-size:.95em}}
+.agree{{color:var(--gr);font-weight:600}}.conflict{{color:var(--r);font-weight:600}}.unique{{color:var(--b);font-weight:600}}
+
+/* Actions */
+.act-list{{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}}
+.act-item{{background:var(--c2);border-radius:10px;padding:14px 12px;border-left:3px solid var(--g);font-size:.82em;line-height:1.6}}
+.act-item .num{{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--g);color:#1a1a24;text-align:center;line-height:20px;font-size:.7em;font-weight:700;margin-right:6px}}
+.act-item em{{color:#ddd;font-style:normal;font-weight:600}}
+
+/* Narrative */
+.nar h3{{color:var(--g);font-size:1em;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--bd)}}
+.nar p{{color:#bbb;font-size:.84em;margin:4px 0;line-height:1.8}}
+.nar b{{color:#ddd}}
+
+.footer{{text-align:center;color:#555;font-size:.75em;margin:30px 0 10px;line-height:1.8}}
+
+@media(max-width:768px){{.sum{{grid-template-columns:repeat(2,1fr)}}.act-list{{grid-template-columns:1fr}}.zw-grid{{grid-template-columns:repeat(2,1fr)}}}}
+@media(max-width:480px){{.sum{{grid-template-columns:1fr}}.nav-btn{{font-size:.8em;padding:12px 6px}}}}
+</style></head><body>
+<div class="top-nav">
+  <button class="nav-btn on" onclick="sw('bazi')">八字命盘<span class="sub">子平术</span></button>
+  <button class="nav-btn" onclick="sw('ziwei')">紫微斗数<span class="sub">星盘分析</span></button>
+  <button class="nav-btn" onclick="sw('dual')">双鉴总结<span class="sub">交叉验证</span></button>
+</div>
+
+<div id="tb-bazi" class="panel on"><div class="wrap">{bazi_content}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
+
+<div id="tb-ziwei" class="panel"><div class="wrap">{ziwei_content}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
+
+<div id="tb-dual" class="panel"><div class="wrap"><div class="hdr"><h1>命运双鉴 · 综合交叉验证</h1><div class="sub">八字 × 紫微斗数 —— 两套独立命理体系互相印证</div></div>{dual_content}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
+
+<script>
+function sw(n){{document.querySelectorAll('.nav-btn').forEach(function(b){{b.classList.remove('on')}});document.querySelectorAll('.panel').forEach(function(p){{p.classList.remove('on')}});document.getElementById('tb-'+n).classList.add('on');event.target.classList.add('on')}}
+</script>
+</body></html>'''
+
+# OLD TEMPLATE (kept for reference, not used)
 HTML = r'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>命运双鉴 __DATE__</title>
 <style>
 :root{--bg:#0f0f14;--card:#1a1a24;--c2:#222232;--t:#d4d4dc;--g:#c9a96e;--p:#8b5cf6;--r:#e85d75;--b:#60a5fa;--gr:#4ade80;--bd:#2a2a3a;--wx-wood:#4ade80;--wx-fire:#f97316;--wx-earth:#a78b5a;--wx-metal:#e2e8a0;--wx-water:#38bdf8}
@@ -841,6 +960,204 @@ setTimeout(function(){document.getElementById('guidePanel').classList.add('open'
 # ═══════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════
+# ═══════════════════════════════════════
+# V2: Clean inline modules, no iframes
+# ═══════════════════════════════════════
+
+def module_card(icon, title, content, default_open=False):
+    """A single collapsible module card"""
+    return f'''<div class="mod">
+    <div class="mod-hd{' open' if default_open else ''}" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+      <span class="mod-icon">{icon}</span><span>{title}</span><span class="mod-arr">▼</span>
+    </div>
+    <div class="mod-bd{' open' if default_open else ''}">{content}</div></div>'''
+
+def info_badges(items):
+    """Row of info badges"""
+    return '<div class="badges">'+''.join(f'<span class="badge">{v}</span>' for v in items)+'</div>'
+
+def gen_bazi_html_v2(bz):
+    """八字tab：4个独立模块"""
+    p = bz['四柱']; wx = bz['五行分布']; yong = bz['用神分析']['用神']; ji = bz['用神分析']['忌神']
+    sq = bz['用神分析']['身强身弱']; sex = bz['输入']['性别']; dy = bz['大运']
+
+    # ── 模块1: 白话总结 ──
+    cards_html = ''
+    for c in _bazi_card_data(bz):
+        tags = ''.join(f'<span class="tg {t["c"]}">{t["t"]}</span>' for t in c['tags'])
+        cards_html += f'<div class="vc"><div class="vc-icon">{c["icon"]}</div><h3>{c["title"]}</h3><div class="big {c["vc"]}">{c["verdict"]}</div><div class="detail">{c["reason"]}</div><div style="margin-top:8px">{tags}</div></div>'
+    mod1 = module_card('💬', '白话总结', f'<div class="sum">{cards_html}</div>', True)
+
+    # ── 模块2: 排盘数据 ──
+    ss = bz['十神标注']
+    chart = '<table class="bzt"><tr><th></th><th>年柱</th><th>月柱</th><th>日柱</th><th>时柱</th></tr>'
+    for rn in ["天干","地支","纳音","十二长生"]:
+        chart += f'<tr><td class="lbl">{rn}</td>'
+        for col in ["年柱","月柱","日柱","时柱"]:
+            if rn=="天干":
+                dm = ' day-master' if col=="日柱" else ''
+                chart += f'<td class="gz{dm}">{p[col]["天干"]} {wx_dot(p[col]["天干五行"])}<br><small>{ss[col]["天干十神"]}</small></td>'
+            elif rn=="地支": chart += f'<td>{p[col]["地支"]} {wx_dot(p[col]["地支五行"])}<br><small>{"·".join(p[col]["藏干"])}</small></td>'
+            elif rn=="纳音": chart += f'<td>{p[col]["纳音"]}</td>'
+            else: chart += f'<td>{p[col]["日主十二长生在此"]}</td>'
+        chart += '</tr>'
+    chart += '</table>'
+    # 五行力量
+    wx_total = sum(wx.values())
+    wx_bar = '<div class="wx-bar">'
+    for w, c in [("木","4ade80"),("火","f97316"),("土","a78b5a"),("金","e2e8a0"),("水","38bdf8")]:
+        pct = wx.get(w,0)/wx_total*100 if wx_total else 0
+        if pct>0: wx_bar += f'<div style="width:{pct:.0f}%;background:#{c}"></div>'
+    wx_bar += '</div><div class="wx-lab">'
+    for w in ["木","火","土","金","水"]: wx_bar += f'<span>{wx_dot(w)} {wx.get(w,0)} ({wx.get(w,0)/wx_total*100:.0f}%)</span> '
+    wx_bar += '</div>'
+    # 用神忌神
+    yj = f'<div class="box"><p>日主<b>{bz["日主"]["天干"]}</b>（{bz["日主"]["五行"]}）· <b>{sq}</b>（{bz["用神分析"]["日主力量占比"]}）</p><p>用神：<span class="green"><b>{"、".join(yong)}</b></span> | 忌神：<span class="red"><b>{"、".join(ji)}</b></span></p>'
+    if bz['用神分析']['调候需求']: yj += f'<p>调候：{bz["用神分析"]["调候需求"]}</p>'
+    # 地支冲突
+    cf = bz['地支关系']['冲突列表']
+    if cf:
+        yj += '<p style="margin-top:8px">'
+        for c in cf: yj += f'<span class="red">[{c["关系"]}]</span> {c["涉及"]} · '
+        yj += '</p>'
+    yj += '</div>'
+    mod2 = module_card('📊', '排盘数据', chart + wx_bar + yj, True)
+
+    # ── 模块3: 命理分析 ──
+    analysis_html = ''
+    for icon, title, content in _bazi_analysis_data(bz):
+        analysis_html += module_card(icon, title, f'<div style="color:#bbb;line-height:1.8">{content}</div>')
+    mod3 = module_card('📋', '命理分析', analysis_html, True)
+
+    # ── 模块4: 大运走势 ──
+    dy_html = f'<p style="color:#888;margin-bottom:10px"><b>{dy["起运年龄"]}岁起运 · {dy["排法"]}</b></p>'
+    dy_html += '<div class="dy-row">'
+    for d in dy['大运列表']:
+        is_y = d['天干五行'] in yong; is_j = d['天干五行'] in ji
+        cls = 'dy-y' if is_y else ('dy-j' if is_j else '')
+        label = '用神运' if is_y else ('忌神运' if is_j else '平运')
+        lc = 'var(--gr)' if is_y else ('var(--r)' if is_j else '#888')
+        dy_html += f'<div class="dy-s {cls}"><div class="dy-a">{d["年龄段"]}</div><div class="dy-g">{d["干支"]}</div><div style="font-size:.65em;color:{lc}">{label}</div></div>'
+    dy_html += '</div>'
+    for d in dy['大运列表']:
+        is_y = d['天干五行'] in yong; is_j = d['天干五行'] in ji
+        note = f'{d["天干五行"]}为用神→此运顺遂' if is_y else (f'{d["天干五行"]}为忌神→此运多阻' if is_j else '平运')
+        dy_html += module_card('', f'{d["年龄段"]} · {d["干支"]} ({d["天干五行"]}+{d["地支五行"]})', f'<p style="color:#bbb">{note}</p>')
+    mod4 = module_card('⏳', '大运走势', dy_html)
+
+    return mod1 + mod2 + mod3 + mod4
+
+def _bazi_analysis_data(bz):
+    """Return list of (icon, title, content) for analysis sections"""
+    p = bz['四柱']; wx = bz['五行分布']; y = bz['用神分析']['用神']; j = bz['用神分析']['忌神']
+    g = bz['日主']['天干']; rw = bz['日主']['五行']; sq = bz['用神分析']['身强身弱']; sex = bz['输入']['性别']
+    d = {'甲':'正直有领导力，直率固执','乙':'柔韧细腻，优柔寡断','丙':'热情光明，急躁爱面子','丁':'温和执着，内敛有心机','戊':'厚重诚信，保守稳重','己':'包容温和，多疑能忍','庚':'刚强果断，讲义气冲动','辛':'精致挑剔，有品位要面子','壬':'聪明通融，任性善变','癸':'细腻敏感，内向多情'}
+    target = '正官' if sex=='女' else '正财'; tn = '夫星' if sex=='女' else '妻星'
+    cs = [v['天干十神'] for v in bz['十神标注'].values()]
+    has_target = target in cs
+    m = {'木':'肝胆/筋骨','火':'心血管/眼睛','土':'脾胃/消化','金':'肺/呼吸道','水':'肾/泌尿'}
+    wx_desc = '；'.join(f'{w}={c}({m[w]})' for w,c in sorted(wx.items(),key=lambda x:-x[1]))
+
+    secs = [
+        ('🔍', '日主强弱', f'日主<b>{g}</b>（{rw}），生于{p["月柱"]["地支"]}月。月令状态+地支根气+生扶数量综合分析→<b>{sq}</b>。'),
+        ('🧠', '性格特质', f'日主{g}（{rw}）→{d.get(g,"")}。{sq}。十神组合进一步细化性格画像。'),
+    ]
+    # Marriage
+    if sex == '女':
+        secs.append(('💍', '婚姻感情', f'{sex}命以{target}为{tn}。{tn}{"透出→配偶缘分不差。" if has_target else "不显→需大运流年引动。"}配偶宫日支为{p["日柱"]["地支"]}。{"伤官见官则婚姻多波折" if "伤官" in cs else ""}'))
+    else:
+        secs.append(('💍', '婚姻感情', f'{sex}命以{target}为{tn}。{tn}{"透出→配偶缘分不差。" if has_target else "不显→需大运流年引动。"}配偶宫日支为{p["日柱"]["地支"]}。'))
+    # Career
+    cai_info = '财星透出→有赚钱机会。' if ('正财' in cs or '偏财' in cs) else '财星不显→靠技能求财。'
+    secs.append(('💰', '事业财运', f'{cai_info}{"有劫财→注意破财。" if "劫财" in cs else ""}用神{"、".join(y)}行业最有利。忌神{"、".join(j)}行业需谨慎。'))
+    # Health
+    health_pts = []
+    for w in ['火','木','土','金','水']:
+        c = wx.get(w,0)
+        if c >= 7: health_pts.append(f'{w}过旺→注意{m[w]}')
+        elif c <= 1: health_pts.append(f'{w}偏弱→注意{m[w]}')
+    secs.append(('🏥', '健康', f'{"; ".join(health_pts) if health_pts else "五行相对平衡"}。少熬夜、饮食均衡、定期体检。'))
+    # Dayun
+    good = [d for d in bz['大运']['大运列表'] if d['天干五行'] in y]
+    secs.append(('⏳', '大运关键期', f'{bz["大运"]["起运年龄"]}岁起运{bz["大运"]["排法"]}。用神运：{"、".join(d["年龄段"] for d in good[:3]) if good else "各运起伏"}。'))
+    return secs
+
+def gen_ziwei_html_v2(zw):
+    """紫微tab：5个独立模块"""
+    gongs = zw['十二宫']
+
+    # ── 模块1: 白话总结 ──
+    mod1 = module_card('💬', '白话总结', f'<div class="sum">{_ziwei_cards(zw)}</div>', True)
+
+    # ── 模块2: 星盘总览 ──
+    order = ['巳','午','未','申','辰',None,None,'酉','卯',None,None,'戌','寅','丑','子','亥']
+    gong_by_zhi = {g['地支']:g for g in gongs}
+    grid = '<div class="zw-grid">'
+    for z in order:
+        if z is None:
+            grid += f'<div class="zw-c"><div class="zw-ctr">☯<br><small>命·{zw["命宫"]}<br>身·{zw["身宫"]}<br>{zw["五行局"]}<br>紫微在{zw["紫微星在"]}</small></div></div>'
+        else:
+            g = gong_by_zhi.get(z)
+            if g:
+                mjr = ''.join(f'<span class="st-mjr{" mi" if s["庙旺"]=="庙旺" else ""}">{s["星名"]}</span>' for s in g['主星'])
+                aux = ''.join(f'<span class="st-{"ji" if s["类型"]=="吉" else "sha" if s["类型"]=="煞" else "za"}">{s["星名"]}</span>' for s in g['辅星'])
+                si = ''.join(f'<span class="st-si">{s["化星"]}</span>' for s in g['四化'])
+                grid += f'<div class="zw-p{(" empty" if not g["主星"] else "")}"><div class="zw-pn">{g["宫名"]}<span class="zw-pz">{g["干支"]}</span></div><div class="zw-st">{mjr if mjr else "<span class=dim>(空)</span>"}</div><div class="zw-st">{aux}</div><div class="zw-st">{si}</div><div class="zw-dx">{g["大限"] or ""}</div></div>'
+    grid += '</div>'
+    mod2 = module_card('🌟', '星盘总览', grid, True)
+
+    # ── 模块3: 命理分析 ──
+    analysis_html = ''
+    for g in gongs:
+        mjr = ', '.join(f'{s["星名"]}({s["庙旺"]})' for s in g['主星']) or '空宫'
+        aux = ', '.join(f'{s["星名"]}({s["类型"]})' for s in g['辅星']) or '无'
+        si = ', '.join(s['化星'] for s in g['四化']) or '无'
+        tris = f'对宫：{g["三方四正"]["对宫"]}，三合：{g["三方四正"]["三合1"]}、{g["三方四正"]["三合2"]}'
+        analysis_html += module_card('', f'{g["宫名"]} ({g["干支"]})', f'<p style="color:#bbb;line-height:1.8">主星：<em>{mjr}</em> | 辅星：{aux} | 四化：{si}<br>{tris}</p>')
+    mod3 = module_card('📋', '命理分析', analysis_html, True)
+
+    # ── 模块4: 四化飞星 ──
+    sh = zw['四化']; hua_cls = {'化禄':('lu','🟢'),'化权':('quan','🟣'),'化科':('ke','🔵'),'化忌':('ji','🔴')}
+    sihua_html = '<div class="sh-ban">'
+    for hn, sn in sh.items():
+        cls, em = hua_cls.get(hn,('',''))
+        gn = next((g['宫名'] for g in gongs if any(s['化星']==hn for s in g['四化'])), '?')
+        sihua_html += f'<div class="sh-c sh-{cls}"><div class="sh-l">{em} {hn}</div><div>{sn}</div><div class="dim" style="font-size:.7em">在{gn}</div></div>'
+    sihua_html += '</div>'
+    sihua_html += '<p style="color:#888;font-size:.85em">生年干决定四化：化禄为优势所在，化权为发力方向，化科为名声所在，化忌为人生课题。</p>'
+    mod4 = module_card('🔄', '四化飞星', sihua_html)
+
+    # ── 模块5: 大限走势 ──
+    dx_html = f'<p style="color:#888;margin-bottom:8px"><b>{zw["大限"]["排法"]}</b></p>'
+    for dx in zw['大限']['大限列表']:
+        g = next((g for g in gongs if g['宫名']==dx['宫位']), None)
+        stars = ', '.join(s['星名'] for s in g['主星']) if g and g['主星'] else '空宫'
+        dx_html += module_card('', f'{dx["年龄段"]} · {dx["宫位"]}({dx["地支"]})', f'<p style="color:#bbb">宫内：{stars}</p>')
+    mod5 = module_card('⏳', '大限走势', dx_html)
+
+    return mod1 + mod2 + mod3 + mod4 + mod5
+
+def gen_dual_panel(bz, zw):
+    """Generate combined analysis panel"""
+    yong = bz['用神分析']['用神']
+    dirs = {'木':'东','火':'南','土':'中','金':'西','水':'北'}
+    colors = {'木':'青绿','火':'红紫','土':'黄棕','金':'白','水':'黑蓝'}
+    yong_str = ' · '.join(yong)
+
+    h = module_card('📊', '七维交叉验证表', f'<div class="xref-wrap"><table class="xref-table"><tr><th></th><th>八字</th><th>紫微</th><th>一致性</th></tr>{gen_cross_ref(bz, zw)}</table></div>', True)
+    h += module_card('🎯', '综合定论', f'<div class="sum">{gen_verdict_cards(bz, zw)}</div>', True)
+    h += module_card('📝', '详细命理分析', gen_narrative(bz, zw))
+
+    actions = f'''<div class="act-list">
+    <div class="act-item"><span class="num">1</span><em>用神方向：</em>有利五行 <strong>{yong_str}</strong>。方位{' · '.join(dirs[w] for w in yong)}。颜色{' · '.join(colors[w] for w in yong)}。</div>
+    <div class="act-item"><span class="num">2</span><em>行业选择：</em>优先{yong_str}属性相关行业。</div>
+    <div class="act-item"><span class="num">3</span><em>健康管理：</em>定期体检，关注五行偏枯对应的脏腑。</div>
+    <div class="act-item"><span class="num">4</span><em>感情经营：</em>关注配偶星和配偶宫状态，主动经营关系。</div>
+    <div class="act-item"><span class="num">5</span><em>运势节奏：</em>用神运积极进取，忌神运保守稳健。</div>
+    <div class="act-item"><span class="num">6</span><em>理性看待：</em>命理为传统民俗文化参考，人生走向取决于自己的选择和努力。</div></div>'''
+    h += module_card('📋', '行动建议', actions)
+    return h
+
 def wrap_standalone(title, content, extra_css=''):
     """Wrap content as standalone HTML document"""
     return f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>{title}</title><style>
@@ -889,8 +1206,24 @@ def generate(y, m, d, h, sex):
     bz = compute_bazi(y, m, d, h, sex)
     zw = compute_ziwei(y, m, d, h, sex)
 
-    # Generate standalone bazi HTML
-    bazi_standalone = wrap_standalone('八字命盘', gen_bazi_html(bz))
+    # Build final HTML using the inline template
+    fname = f'命运双鉴_{y}{m:02d}{d:02d}_{sex}.html'
+    out = os.path.join(os.path.dirname(BASE), fname)
+
+    # Generate all dynamic content
+    bazi_content = gen_bazi_html_v2(bz)
+    zw_content = gen_ziwei_html_v2(zw)
+    dual_content = gen_dual_panel(bz, zw)
+
+    html = HTML_V2.format(
+        date=f'{y}.{m}.{d}',
+        bazi_content=bazi_content,
+        ziwei_content=zw_content,
+        dual_content=dual_content,
+    )
+    with open(out, 'w', encoding='utf-8') as f:
+        f.write(html)
+    return out
     # Generate standalone ziwei HTML
     ziwei_standalone = wrap_standalone('紫微斗数', gen_ziwei_html(zw),
         '.zw-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:20px}}'
