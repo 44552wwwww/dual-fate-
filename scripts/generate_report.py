@@ -738,6 +738,8 @@ body{{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC',
 .agree{{color:var(--gr);font-weight:600}}.conflict{{color:var(--r);font-weight:600}}.unique{{color:var(--b);font-weight:600}}
 
 /* Actions */
+.actions{{background:linear-gradient(135deg,rgba(201,169,110,.06),rgba(139,92,246,.06));border:1px solid var(--bd);border-radius:16px;padding:28px 24px;margin-top:24px}}
+.actions h3{{margin-bottom:16px}}
 .act-list{{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}}
 .act-item{{background:var(--c2);border-radius:10px;padding:14px 12px;border-left:3px solid var(--g);font-size:.82em;line-height:1.6}}
 .act-item .num{{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--g);color:#1a1a24;text-align:center;line-height:20px;font-size:.7em;font-weight:700;margin-right:6px}}
@@ -1148,24 +1150,34 @@ def gen_ziwei_html_v2(zw):
     return (sub1, sub2, sub3, sub4, sub5)
 
 def gen_dual_panel(bz, zw):
-    """Generate combined analysis panel"""
+    """双鉴总结：参考版风格，不嵌套折叠"""
     yong = bz['用神分析']['用神']
     dirs = {'木':'东','火':'南','土':'中','金':'西','水':'北'}
     colors = {'木':'青绿','火':'红紫','土':'黄棕','金':'白','水':'黑蓝'}
     yong_str = ' · '.join(yong)
 
-    h = module_card('📊', '七维交叉验证表', f'<div class="xref-wrap"><table class="xref-table"><tr><th></th><th>八字</th><th>紫微</th><th>一致性</th></tr>{gen_cross_ref(bz, zw)}</table></div>', True)
-    h += module_card('🎯', '综合定论', f'<div class="sum">{gen_verdict_cards(bz, zw)}</div>', True)
-    h += module_card('📝', '详细命理分析', gen_narrative(bz, zw))
+    h = ''
+    # 1. Cross-ref table
+    h += '<h2 style="color:var(--g);margin-bottom:12px;font-size:1.1em">📊 七维交叉验证表</h2>'
+    h += f'<div class="xref-wrap"><table class="xref-table"><tr><th></th><th>八字</th><th>紫微</th><th>一致性</th></tr>{gen_cross_ref(bz, zw)}</table></div>'
 
-    actions = f'''<div class="act-list">
-    <div class="act-item"><span class="num">1</span><em>用神方向：</em>有利五行 <strong>{yong_str}</strong>。方位{' · '.join(dirs[w] for w in yong)}。颜色{' · '.join(colors[w] for w in yong)}。</div>
-    <div class="act-item"><span class="num">2</span><em>行业选择：</em>优先{yong_str}属性相关行业。</div>
-    <div class="act-item"><span class="num">3</span><em>健康管理：</em>定期体检，关注五行偏枯对应的脏腑。</div>
-    <div class="act-item"><span class="num">4</span><em>感情经营：</em>关注配偶星和配偶宫状态，主动经营关系。</div>
-    <div class="act-item"><span class="num">5</span><em>运势节奏：</em>用神运积极进取，忌神运保守稳健。</div>
-    <div class="act-item"><span class="num">6</span><em>理性看待：</em>命理为传统民俗文化参考，人生走向取决于自己的选择和努力。</div></div>'''
-    h += module_card('📋', '行动建议', actions)
+    # 2. Verdict cards
+    h += '<h2 style="color:var(--g);margin:24px 0 12px;font-size:1.1em">🎯 综合定论</h2>'
+    h += f'<div class="sum">{gen_verdict_cards(bz, zw)}</div>'
+
+    # 3. Narrative analysis (8 chapters, flat, no folding)
+    h += '<h2 style="color:var(--g);margin:24px 0 12px;font-size:1.1em">📝 详细命理分析</h2>'
+    h += gen_narrative(bz, zw)
+
+    # 4. Actions
+    h += '<div class="actions"><h3 style="color:var(--g);">📋 行动建议</h3><div class="act-list">'
+    h += f'<div class="act-item"><span class="num">1</span><em>用神方向：</em>有利五行 <strong>{yong_str}</strong>。方位{" · ".join(dirs[w] for w in yong)}。颜色{" · ".join(colors[w] for w in yong)}。</div>'
+    h += f'<div class="act-item"><span class="num">2</span><em>行业选择：</em>优先{yong_str}属性相关行业。</div>'
+    h += '<div class="act-item"><span class="num">3</span><em>健康管理：</em>定期体检，关注五行偏枯对应的脏腑。</div>'
+    h += '<div class="act-item"><span class="num">4</span><em>感情经营：</em>关注配偶星和配偶宫状态，主动经营关系。</div>'
+    h += '<div class="act-item"><span class="num">5</span><em>运势节奏：</em>用神运积极进取，忌神运保守稳健。</div>'
+    h += '<div class="act-item"><span class="num">6</span><em>理性看待：</em>命理为传统民俗文化参考，人生走向取决于自己的选择和努力。</div>'
+    h += '</div></div>'
     return h
 
 def wrap_standalone(title, content, extra_css=''):
