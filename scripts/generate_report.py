@@ -257,49 +257,28 @@ def gen_ziwei_html(zw):
     '''
 
 def _ziwei_cards(zw):
-    gongs = zw['十二宫']; sex = zw['输入']['性别']
+    """Generate detailed plain-language summary cards for ziwei"""
+    gongs = zw['十二宫']
     def find(name):
         for g in gongs:
             if g['宫名']==name: return g
         return None
-    fugong = find('夫妻宫'); caibogong = find('财帛宫'); qianyi = find('迁移宫')
-    jiqiong = find('疾厄宫'); zinv = find('子女宫'); minggong = find('命宫'); guanlu = find('官禄宫')
-    def stars(g): return ', '.join(s['星名'] for s in g['主星']) if g and g['主星'] else '空宫'
-    def sihua(g): return ', '.join(s['化星'] for s in g['四化']) if g and g['四化'] else '无'
-    def aux_good(g): return sum(1 for s in g['辅星'] if s['类型']=='吉') if g else 0
 
     cards = []
-    # Marriage
-    f_good = fugong and len(fugong['主星'])>0
-    cards.append({'title':'💍 婚姻','verdict':'配偶素质不错' if f_good else '婚姻需更多经营','vc':'good' if f_good else 'ok',
-                  'detail':f'夫妻宫{fugong["干支"] if fugong else "?"}。主星：<em>{stars(fugong)}</em>。四化：{sihua(fugong)}。{"庙旺状态佳" if f_good else ""}',
-                  'tags':[{'t':'配偶素质好' if f_good else '需经营','c':'tag-good' if f_good else 'tag-tip'}]})
-    # Wealth
-    cb_good = caibogong and any('化禄' in s['化星'] for s in caibogong['四化'])
-    cards.append({'title':'💰 财运','verdict':'财源有信号' if cb_good else '财运需努力','vc':'good' if cb_good else 'ok',
-                  'detail':f'财帛宫{caibogong["干支"] if caibogong else "?"}。主星：<em>{stars(caibogong)}</em>。{"有化禄→财源较好" if cb_good else "靠自身技能求财"}。',
-                  'tags':[{'t':'化禄在财帛' if cb_good else '稳中求进','c':'tag-good' if cb_good else 'tag-tip'}]})
-    # Career
-    gl_good = guanlu and len(guanlu['主星'])>0
-    cards.append({'title':'💼 事业','verdict':'事业宫有支撑' if gl_good else '事业需摸索','vc':'good' if gl_good else 'ok',
-                  'detail':f'官禄宫{guanlu["干支"] if guanlu else "?"}。主星：<em>{stars(guanlu)}</em>。四化：{sihua(guanlu)}。',
-                  'tags':[{'t':'有方向' if gl_good else '需探索','c':'tag-good' if gl_good else 'tag-tip'}]})
-    # Health
-    je_warn = jiqiong and len(jiqiong['辅星'])>0 and any(s['类型']=='煞' for s in jiqiong['辅星'])
-    cards.append({'title':'🏥 健康','verdict':'需留意' if je_warn else '正常关注','vc':'warn' if je_warn else 'ok',
-                  'detail':f'疾厄宫{jiqiong["干支"] if jiqiong else "?"}。主星：<em>{stars(jiqiong)}</em>。煞星：{sum(1 for s in jiqiong["辅星"] if s["类型"]=="煞") if jiqiong else 0}颗。',
-                  'tags':[{'t':'注意健康' if je_warn else '定期体检','c':'tag-bad' if je_warn else 'tag-tip'}]})
-    # Children
-    zn_good = zinv and len(zinv['主星'])>0
-    cards.append({'title':'👶 子女','verdict':'子女宫有信号' if zn_good else '子女运平','vc':'good' if zn_good else 'ok',
-                  'detail':f'子女宫{zinv["干支"] if zinv else "?"}。主星：<em>{stars(zinv)}</em>。{"有主星坐守→子女运较好" if zn_good else "空宫→子女运需看大限引动"}。',
-                  'tags':[{'t':'子女缘好' if zn_good else '顺其自然','c':'tag-good' if zn_good else 'tag-tip'}]})
-    # Travel
-    qy_ji = qianyi and any('化忌' in s['化星'] for s in qianyi['四化'])
-    cards.append({'title':'✈️ 外出','verdict':'外出需谨慎' if qy_ji else '外出运正常','vc':'warn' if qy_ji else 'ok',
-                  'detail':f'迁移宫{qianyi["干支"] if qianyi else "?"}。主星：<em>{stars(qianyi)}</em>。{"有化忌→外出/远行需做好心理准备" if qy_ji else "无不利信号"}。',
-                  'tags':[{'t':'少折腾' if qy_ji else '可远行','c':'tag-bad' if qy_ji else 'tag-good'}]})
-    return '\n'.join(card(c['title'], '', c['verdict'], c['vc'], c['detail'], '') for c in cards)
+    for gn in ['夫妻宫','财帛宫','官禄宫','疾厄宫','子女宫','迁移宫']:
+        g = find(gn)
+        if not g: continue
+        text = _palace_talk(zw, gn, g['干支'], g['主星'], g['辅星'], g['四化'], g['三方四正'])
+        # Determine verdict from palace content
+        has_good_stars = any(s['星名'] in ['紫微','天府','天相','天梁','天同','武曲'] for s in g['主星']) if g['主星'] else False
+        has_bad = any('化忌' in s['化星'] for s in g['四化']) or (g['辅星'] and any(s['类型']=='煞' for s in g['辅星']))
+        vc = 'good' if (has_good_stars and not has_bad) else ('warn' if has_bad else 'ok')
+        verdict = {'夫妻宫':'婚姻','财帛宫':'财运','官禄宫':'事业','疾厄宫':'健康','子女宫':'子女','迁移宫':'外出'}
+        icon = {'夫妻宫':'💍','财帛宫':'💰','官禄宫':'💼','疾厄宫':'🏥','子女宫':'👶','迁移宫':'✈️'}
+        # Truncate text for card display
+        short = text[:200] + '…' if len(text) > 200 else text
+        cards.append(card(f'{icon.get(gn,"")} {verdict.get(gn,gn)}', '', verdict.get(gn,''), vc, short, f'{gn}({g["干支"]})'))
+    return '\n'.join(cards)
 
 def _ziwei_analysis(zw):
     gongs = zw['十二宫']
@@ -982,6 +961,82 @@ setTimeout(function(){document.getElementById('guidePanel').classList.add('open'
 # V2: Clean inline modules, no iframes
 # ═══════════════════════════════════════
 
+def _palace_talk(zw, gn, gz, mjr, aux, si, tris):
+    """Generate plain-language analysis for a ziwei palace"""
+    text = ''
+    stars = [s['星名'] for s in mjr] if mjr else []
+    aux_names = [s['星名'] for s in aux] if aux else []
+    si_names = [s['化星'] for s in si] if si else []
+    ji_aux = [s['星名'] for s in aux if s['类型']=='吉'] if aux else []
+    sha_aux = [s['星名'] for s in aux if s['类型']=='煞'] if aux else []
+    has_lu = any('化禄' in s['化星'] for s in si) if si else False
+    has_ji = any('化忌' in s['化星'] for s in si) if si else False
+    has_quan = any('化权' in s['化星'] for s in si) if si else False
+    has_ke = any('化科' in s['化星'] for s in si) if si else False
+
+    # Empty palace handling
+    if not stars:
+        text += f'{gn}为空宫——这个领域没有主星坐守，说明它不是你人生的主动发力点，而是"借对宫（{tris["对宫"]}）的光来照亮"。你的{gn}状态，很大程度取决于{tris["对宫"]}的情况。'
+        if aux_names:
+            text += f' 不过，{gn}里还有{"、".join(aux_names)}这些辅星在默默起作用。'
+        return text
+
+    # Palace-specific narrative
+    star_descs = {
+        '紫微': '紫微是帝王星——代表领导力、自尊心、要面子。有它在的宫位，意味着你在这个领域天生有一种"我不干则已，干就要被人看见"的劲头',
+        '天机': '天机是谋士星——代表聪明、谋划、灵活应变。有它在的宫位，你在这个领域脑子转得特别快，善于分析盘算',
+        '太阳': '太阳是光明之星——代表热情、付出、照亮别人。有它在的宫位，你在相关领域愿意主动担当、发光发热',
+        '武曲': '武曲是财星——代表执行力、决断力、实际利益。有它在的宫位，你在相关领域务实、不玩虚的、看重结果',
+        '天同': '天同是福星——代表温和、知足、不争。有它在的宫位，你对相关事务不那么紧绷，顺其自然反而好',
+        '廉贞': '廉贞是事业星+桃花星——代表事业心和情感纠葛。有它在的宫位，你会认真对待但又容易投入感情',
+        '天府': '天府是库星——代表包容、稳重、善于守成。有它在的宫位，你在相关领域稳得住、有储蓄意识',
+        '太阴': '太阴是月亮——代表细腻、温柔、情感。有它在的宫位，你对相关事务敏感、注重细节',
+        '贪狼': '贪狼是欲望之星——代表才艺、交际、桃花。有它在的宫位，你对相关领域有强烈的好奇心和表现欲',
+        '巨门': '巨门是暗星——代表深度思考、口才、是非。有它在的宫位，你在这个领域容易深究到底，也容易招惹口舌',
+        '天相': '天相是印星——代表协调、公正、辅助。有它在的宫位，你在这个领域擅长居中协调，不喜独断专行',
+        '天梁': '天梁是荫星——代表庇护、稳重、长辈缘。有它在的宫位，你在这个领域能遇到贵人庇护，像有长辈在罩着你',
+        '七杀': '七杀是将星——代表果断、竞争、杀伐决断。有它在的宫位，你在相关领域雷厉风行、不拖泥带水',
+        '破军': '破军是先锋——代表破旧立新、敢闯敢拼。有它在的宫位，你在相关领域不满足于现状，总要折腾出新花样',
+    }
+
+    for sn in stars:
+        sd = star_descs.get(sn, f'{sn}是紫微斗数中的重要星曜')
+        text += f'{sd}。'
+
+    # Aux stars
+    if ji_aux:
+        text += f' 更难得的是，{gn}里还有{"、".join(ji_aux)}这些好星——'
+        aux_descs = {
+            '左辅': '左辅是明面上的贵人，会公开帮你、扶持你',
+            '右弼': '右弼是暗中的贵人，在你不知道的地方为你铺路',
+            '文昌': '文昌代表文书、学识、考试运',
+            '文曲': '文曲代表才艺、审美、灵活应变',
+            '天魁': '天魁是天上掉下来的贵人，关键时刻突然出现',
+            '天钺': '天钺代表权威人士的暗中提携',
+            '禄存': '禄存是实在的福禄，真金白银的好处',
+        }
+        text += '、'.join(aux_descs.get(a, a) for a in ji_aux) + '。'
+
+    if sha_aux:
+        text += f' 但也要注意{gn}里的{"、".join(sha_aux)}——'
+        sha_descs = {
+            '擎羊': '擎羊像一把明刀，代表公开的竞争和冲突',
+            '陀罗': '陀罗是暗中的拖延纠缠，事情反复磨人',
+            '火星': '火星代表突然的爆发和冲动，好坏事都来得快',
+            '铃星': '铃星是慢性煎熬，像小火慢炖',
+            '地空': '地空是突然落空，计划好的事突然泡汤',
+            '地劫': '地劫是被劫夺，被人抢走机会或钱财',
+        }
+        text += '、'.join(sha_descs.get(a, a) for a in sha_aux) + '。'
+
+    # Si hua
+    if has_lu: text += f' 化禄在{gn}——这是好事，代表{gn}相关事务有福气、有收获，不用太费力就能得到。'
+    if has_quan: text += f' 化权在{gn}——{gn}是你需要主动去争取和掌控的领域，不能等人给，要自己拿。'
+    if has_ke: text += f' 化科在{gn}——{gn}让你容易被看见、被认可，你的名声和口碑跟它有关。'
+    if has_ji: text += f' 化忌在{gn}——这是你此生绕不开的功课。化忌不是灾祸，而是你必须面对和成长的地方。{gn}就是你人生的"修炼场"。'
+
+    return text
+
 def module_card(icon, title, content, default_open=False):
     """A single collapsible module card"""
     return f'''<div class="mod">
@@ -1119,14 +1174,13 @@ def gen_ziwei_html_v2(zw):
     grid += '</div>'
     sub2 = grid
 
-    # Sub-tab 3: 命理分析
+    # Sub-tab 3: 命理分析（大白话详解）
     analysis = ''
     for g in gongs:
-        mjr = ', '.join(f'{s["星名"]}({s["庙旺"]})' for s in g['主星']) or '空宫'
-        aux = ', '.join(f'{s["星名"]}({s["类型"]})' for s in g['辅星']) or '无'
-        si = ', '.join(s['化星'] for s in g['四化']) or '无'
-        tris = f'对宫：{g["三方四正"]["对宫"]}，三合：{g["三方四正"]["三合1"]}、{g["三方四正"]["三合2"]}'
-        analysis += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{g["宫名"]}（{g["干支"]}）：</b>主星 <em>{mjr}</em> · 辅星 {aux} · 四化 {si} · {tris}</div>'
+        gn = g['宫名']; gz = g['干支']; tris = g['三方四正']
+        mjr = g['主星']; aux = g['辅星']; si = g['四化']
+        text = _palace_talk(zw, gn, gz, mjr, aux, si, tris)
+        analysis += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{gn}（{gz}）</b><br>{text}</div>'
     sub3 = analysis
 
     # Sub-tab 4: 四化飞星
