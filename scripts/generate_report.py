@@ -748,6 +748,13 @@ body{{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC',
 .nar p{{color:#bbb;font-size:.84em;margin:4px 0;line-height:1.8}}
 .nar b{{color:#ddd}}
 
+/* Sub tabs */
+.sub-tabs{{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}}
+.sub-btn{{padding:10px 18px;border:1px solid var(--bd);background:var(--card);color:#999;cursor:pointer;border-radius:10px 10px 0 0;transition:all .25s;font-size:.9em;font-family:inherit}}
+.sub-btn:hover{{color:#fff;background:#2a2a3e}}
+.sub-btn.on{{background:var(--c2);color:var(--g);border-bottom-color:var(--c2)}}
+.sub-panel{{display:none}}.sub-panel.on{{display:block}}
+
 .footer{{text-align:center;color:#555;font-size:.75em;margin:30px 0 10px;line-height:1.8}}
 
 @media(max-width:768px){{.sum{{grid-template-columns:repeat(2,1fr)}}.act-list{{grid-template-columns:1fr}}.zw-grid{{grid-template-columns:repeat(2,1fr)}}}}
@@ -759,14 +766,23 @@ body{{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC',
   <button class="nav-btn" onclick="sw('dual')">双鉴总结<span class="sub">交叉验证</span></button>
 </div>
 
-<div id="tb-bazi" class="panel on"><div class="wrap">{bazi_content}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
+<div id="tb-bazi" class="panel on"><div class="wrap">
+<div class="hdr"><h1>八字命盘 · 子平术</h1><div class="sub">Ba Zi · Four Pillars of Destiny</div></div>
+<div class="sub-tabs"><button class="sub-btn on" onclick="swSub('bazi',0,event)">💬 白话总结</button><button class="sub-btn" onclick="swSub('bazi',1,event)">📊 排盘数据</button><button class="sub-btn" onclick="swSub('bazi',2,event)">📋 命理分析</button><button class="sub-btn" onclick="swSub('bazi',3,event)">⏳ 大运走势</button></div>
+<div class="sub-panel on">{bz1}</div><div class="sub-panel">{bz2}</div><div class="sub-panel">{bz3}</div><div class="sub-panel">{bz4}</div>
+<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
 
-<div id="tb-ziwei" class="panel"><div class="wrap">{ziwei_content}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
+<div id="tb-ziwei" class="panel"><div class="wrap">
+<div class="hdr"><h1>紫微斗数 · 星盘命理</h1><div class="sub">Zi Wei Dou Shu · Star Chart</div></div>
+<div class="sub-tabs"><button class="sub-btn on" onclick="swSub('ziwei',0,event)">💬 白话总结</button><button class="sub-btn" onclick="swSub('ziwei',1,event)">🌟 星盘总览</button><button class="sub-btn" onclick="swSub('ziwei',2,event)">📋 命理分析</button><button class="sub-btn" onclick="swSub('ziwei',3,event)">🔄 四化飞星</button><button class="sub-btn" onclick="swSub('ziwei',4,event)">⏳ 大限走势</button></div>
+<div class="sub-panel on">{zw1}</div><div class="sub-panel">{zw2}</div><div class="sub-panel">{zw3}</div><div class="sub-panel">{zw4}</div><div class="sub-panel">{zw5}</div>
+<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
 
-<div id="tb-dual" class="panel"><div class="wrap"><div class="hdr"><h1>命运双鉴 · 综合交叉验证</h1><div class="sub">八字 × 紫微斗数 —— 两套独立命理体系互相印证</div></div>{dual_content}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
+<div id="tb-dual" class="panel"><div class="wrap"><div class="hdr"><h1>命运双鉴 · 综合交叉验证</h1><div class="sub">八字 × 紫微斗数 —— 两套独立命理体系互相印证</div></div>{dual}<div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
 
 <script>
 function sw(n){{document.querySelectorAll('.nav-btn').forEach(function(b){{b.classList.remove('on')}});document.querySelectorAll('.panel').forEach(function(p){{p.classList.remove('on')}});document.getElementById('tb-'+n).classList.add('on');event.target.classList.add('on')}}
+function swSub(tab,idx,ev){{var p=document.getElementById('tb-'+tab);var btns=p.querySelectorAll('.sub-btn');var pns=p.querySelectorAll('.sub-panel');btns.forEach(function(b){{b.classList.remove('on')}});pns.forEach(function(p){{p.classList.remove('on')}});btns[idx].classList.add('on');pns[idx].classList.add('on')}}
 </script>
 </body></html>'''
 
@@ -977,19 +993,18 @@ def info_badges(items):
     return '<div class="badges">'+''.join(f'<span class="badge">{v}</span>' for v in items)+'</div>'
 
 def gen_bazi_html_v2(bz):
-    """八字tab：4个独立模块"""
+    """八字tab：4个子标签"""
     p = bz['四柱']; wx = bz['五行分布']; yong = bz['用神分析']['用神']; ji = bz['用神分析']['忌神']
-    sq = bz['用神分析']['身强身弱']; sex = bz['输入']['性别']; dy = bz['大运']
+    sq = bz['用神分析']['身强身弱']; dy = bz['大运']; ss = bz['十神标注']
 
-    # ── 模块1: 白话总结 ──
+    # Sub-tab 1: 白话总结
     cards_html = ''
     for c in _bazi_card_data(bz):
         tags = ''.join(f'<span class="tg {t["c"]}">{t["t"]}</span>' for t in c['tags'])
         cards_html += f'<div class="vc"><div class="vc-icon">{c["icon"]}</div><h3>{c["title"]}</h3><div class="big {c["vc"]}">{c["verdict"]}</div><div class="detail">{c["reason"]}</div><div style="margin-top:8px">{tags}</div></div>'
-    mod1 = module_card('💬', '白话总结', f'<div class="sum">{cards_html}</div>', True)
+    sub1 = f'<div class="sum">{cards_html}</div>'
 
-    # ── 模块2: 排盘数据 ──
-    ss = bz['十神标注']
+    # Sub-tab 2: 排盘数据
     chart = '<table class="bzt"><tr><th></th><th>年柱</th><th>月柱</th><th>日柱</th><th>时柱</th></tr>'
     for rn in ["天干","地支","纳音","十二长生"]:
         chart += f'<tr><td class="lbl">{rn}</td>'
@@ -1002,7 +1017,7 @@ def gen_bazi_html_v2(bz):
             else: chart += f'<td>{p[col]["日主十二长生在此"]}</td>'
         chart += '</tr>'
     chart += '</table>'
-    # 五行力量
+    # 五行
     wx_total = sum(wx.values())
     wx_bar = '<div class="wx-bar">'
     for w, c in [("木","4ade80"),("火","f97316"),("土","a78b5a"),("金","e2e8a0"),("水","38bdf8")]:
@@ -1011,31 +1026,26 @@ def gen_bazi_html_v2(bz):
     wx_bar += '</div><div class="wx-lab">'
     for w in ["木","火","土","金","水"]: wx_bar += f'<span>{wx_dot(w)} {wx.get(w,0)} ({wx.get(w,0)/wx_total*100:.0f}%)</span> '
     wx_bar += '</div>'
-    # 用神忌神
-    yj = f'<div class="box"><p>日主<b>{bz["日主"]["天干"]}</b>（{bz["日主"]["五行"]}）· <b>{sq}</b>（{bz["用神分析"]["日主力量占比"]}）</p><p>用神：<span class="green"><b>{"、".join(yong)}</b></span> | 忌神：<span class="red"><b>{"、".join(ji)}</b></span></p>'
-    if bz['用神分析']['调候需求']: yj += f'<p>调候：{bz["用神分析"]["调候需求"]}</p>'
-    # 地支冲突
+    yj = f'<div class="box"><p>日主<b>{bz["日主"]["天干"]}</b>（{bz["日主"]["五行"]}·{bz["日主"]["阴阳"]}）· <b>{sq}</b>（{bz["用神分析"]["日主力量占比"]}）</p><p>用神：<span class="green"><b>{"、".join(yong)}</b></span> | 忌神：<span class="red"><b>{"、".join(ji)}</b></span></p></div>'
     cf = bz['地支关系']['冲突列表']
     if cf:
-        yj += '<p style="margin-top:8px">'
+        yj += '<div class="box">'
         for c in cf: yj += f'<span class="red">[{c["关系"]}]</span> {c["涉及"]} · '
-        yj += '</p>'
-    yj += '</div>'
-    mod2 = module_card('📊', '排盘数据', chart + wx_bar + yj, True)
+        yj += '</div>'
+    sub2 = chart + wx_bar + yj
 
-    # ── 模块3: 命理分析 ──
-    analysis_html = ''
+    # Sub-tab 3: 命理分析
+    analysis = ''
     for icon, title, content in _bazi_analysis_data(bz):
-        analysis_html += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{icon} {title}：</b>{content}</div>'
-    mod3 = module_card('📋', '命理分析', analysis_html, True)
+        analysis += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{icon} {title}：</b>{content}</div>'
+    sub3 = analysis
 
-    # ── 模块4: 大运走势 ──
-    dy_html = f'<p style="color:#888;margin-bottom:10px"><b>{dy["起运年龄"]}岁起运 · {dy["排法"]}</b></p>'
-    dy_html += '<div class="dy-row">'
+    # Sub-tab 4: 大运走势
+    dy_html = f'<p style="color:#888;margin-bottom:12px"><b>{dy["起运年龄"]}岁起运 · {dy["排法"]}</b></p><div class="dy-row">'
     for d in dy['大运列表']:
         is_y = d['天干五行'] in yong; is_j = d['天干五行'] in ji
         cls = 'dy-y' if is_y else ('dy-j' if is_j else '')
-        label = '用神运' if is_y else ('忌神运' if is_j else '平运')
+        label = '用神' if is_y else ('忌神' if is_j else '平')
         lc = 'var(--gr)' if is_y else ('var(--r)' if is_j else '#888')
         dy_html += f'<div class="dy-s {cls}"><div class="dy-a">{d["年龄段"]}</div><div class="dy-g">{d["干支"]}</div><div style="font-size:.65em;color:{lc}">{label}</div></div>'
     dy_html += '</div>'
@@ -1044,9 +1054,9 @@ def gen_bazi_html_v2(bz):
         note = f'{d["天干五行"]}为用神→此运顺遂' if is_y else (f'{d["天干五行"]}为忌神→此运多阻' if is_j else '平运')
         lc = 'var(--gr)' if is_y else ('var(--r)' if is_j else '#888')
         dy_html += f'<div style="padding:8px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.8"><b style="color:{lc}">{d["年龄段"]} · {d["干支"]}</b>（{d["天干五行"]}+{d["地支五行"]}）—— {note}</div>'
-    mod4 = module_card('⏳', '大运走势', dy_html)
+    sub4 = dy_html
 
-    return mod1 + mod2 + mod3 + mod4
+    return (sub1, sub2, sub3, sub4)
 
 def _bazi_analysis_data(bz):
     """Return list of (icon, title, content) for analysis sections"""
@@ -1084,15 +1094,15 @@ def _bazi_analysis_data(bz):
     return secs
 
 def gen_ziwei_html_v2(zw):
-    """紫微tab：5个独立模块"""
+    """紫微tab：5个子标签"""
     gongs = zw['十二宫']
-
-    # ── 模块1: 白话总结 ──
-    mod1 = module_card('💬', '白话总结', f'<div class="sum">{_ziwei_cards(zw)}</div>', True)
-
-    # ── 模块2: 星盘总览 ──
     order = ['巳','午','未','申','辰',None,None,'酉','卯',None,None,'戌','寅','丑','子','亥']
     gong_by_zhi = {g['地支']:g for g in gongs}
+
+    # Sub-tab 1: 白话总结
+    sub1 = f'<div class="sum">{_ziwei_cards(zw)}</div>'
+
+    # Sub-tab 2: 星盘总览
     grid = '<div class="zw-grid">'
     for z in order:
         if z is None:
@@ -1105,38 +1115,37 @@ def gen_ziwei_html_v2(zw):
                 si = ''.join(f'<span class="st-si">{s["化星"]}</span>' for s in g['四化'])
                 grid += f'<div class="zw-p{(" empty" if not g["主星"] else "")}"><div class="zw-pn">{g["宫名"]}<span class="zw-pz">{g["干支"]}</span></div><div class="zw-st">{mjr if mjr else "<span class=dim>(空)</span>"}</div><div class="zw-st">{aux}</div><div class="zw-st">{si}</div><div class="zw-dx">{g["大限"] or ""}</div></div>'
     grid += '</div>'
-    mod2 = module_card('🌟', '星盘总览', grid, True)
+    sub2 = grid
 
-    # ── 模块3: 命理分析 ──
-    analysis_html = ''
+    # Sub-tab 3: 命理分析
+    analysis = ''
     for g in gongs:
         mjr = ', '.join(f'{s["星名"]}({s["庙旺"]})' for s in g['主星']) or '空宫'
         aux = ', '.join(f'{s["星名"]}({s["类型"]})' for s in g['辅星']) or '无'
         si = ', '.join(s['化星'] for s in g['四化']) or '无'
         tris = f'对宫：{g["三方四正"]["对宫"]}，三合：{g["三方四正"]["三合1"]}、{g["三方四正"]["三合2"]}'
-        analysis_html += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{g["宫名"]}（{g["干支"]}）：</b>主星 <em>{mjr}</em> · 辅星 {aux} · 四化 {si} · {tris}</div>'
-    mod3 = module_card('📋', '命理分析', analysis_html, True)
+        analysis += f'<div style="color:#bbb;line-height:1.9;padding:10px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--g)">{g["宫名"]}（{g["干支"]}）：</b>主星 <em>{mjr}</em> · 辅星 {aux} · 四化 {si} · {tris}</div>'
+    sub3 = analysis
 
-    # ── 模块4: 四化飞星 ──
+    # Sub-tab 4: 四化飞星
     sh = zw['四化']; hua_cls = {'化禄':('lu','🟢'),'化权':('quan','🟣'),'化科':('ke','🔵'),'化忌':('ji','🔴')}
-    sihua_html = '<div class="sh-ban">'
+    sihua = '<div class="sh-ban">'
     for hn, sn in sh.items():
         cls, em = hua_cls.get(hn,('',''))
         gn = next((g['宫名'] for g in gongs if any(s['化星']==hn for s in g['四化'])), '?')
-        sihua_html += f'<div class="sh-c sh-{cls}"><div class="sh-l">{em} {hn}</div><div>{sn}</div><div class="dim" style="font-size:.7em">在{gn}</div></div>'
-    sihua_html += '</div>'
-    sihua_html += '<p style="color:#888;font-size:.85em">生年干决定四化：化禄为优势所在，化权为发力方向，化科为名声所在，化忌为人生课题。</p>'
-    mod4 = module_card('🔄', '四化飞星', sihua_html)
+        sihua += f'<div class="sh-c sh-{cls}"><div class="sh-l">{em} {hn}</div><div>{sn}</div><div class="dim" style="font-size:.7em">在{gn}</div></div>'
+    sihua += '</div><p style="color:#888;font-size:.85em;margin-top:12px">生年干决定四化：化禄为优势所在，化权为发力方向，化科为名声所在，化忌为人生课题。</p>'
+    sub4 = sihua
 
-    # ── 模块5: 大限走势 ──
-    dx_html = f'<p style="color:#888;margin-bottom:8px"><b>{zw["大限"]["排法"]}</b></p>'
-    for dx in zw['大限']['大限列表']:
-        g = next((g for g in gongs if g['宫名']==dx['宫位']), None)
+    # Sub-tab 5: 大限走势
+    dx = f'<p style="color:#888;margin-bottom:10px"><b>{zw["大限"]["排法"]}</b></p>'
+    for d in zw['大限']['大限列表']:
+        g = next((g for g in gongs if g['宫名']==d['宫位']), None)
         stars = ', '.join(s['星名'] for s in g['主星']) if g and g['主星'] else '空宫'
-        dx_html += f'<div style="padding:8px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.8"><b style="color:var(--g)">{dx["年龄段"]}</b> · {dx["宫位"]}({dx["地支"]}) —— 宫内：{stars}</div>'
-    mod5 = module_card('⏳', '大限走势', dx_html)
+        dx += f'<div style="padding:8px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.8"><b style="color:var(--g)">{d["年龄段"]}</b> · {d["宫位"]}({d["地支"]}) —— 宫内：{stars}</div>'
+    sub5 = dx
 
-    return mod1 + mod2 + mod3 + mod4 + mod5
+    return (sub1, sub2, sub3, sub4, sub5)
 
 def gen_dual_panel(bz, zw):
     """Generate combined analysis panel"""
@@ -1212,15 +1221,15 @@ def generate(y, m, d, h, sex):
     out = os.path.join(os.path.dirname(BASE), fname)
 
     # Generate all dynamic content
-    bazi_content = gen_bazi_html_v2(bz)
-    zw_content = gen_ziwei_html_v2(zw)
+    bz_sub1, bz_sub2, bz_sub3, bz_sub4 = gen_bazi_html_v2(bz)
+    zw_sub1, zw_sub2, zw_sub3, zw_sub4, zw_sub5 = gen_ziwei_html_v2(zw)
     dual_content = gen_dual_panel(bz, zw)
 
     html = HTML_V2.format(
         date=f'{y}.{m}.{d}',
-        bazi_content=bazi_content,
-        ziwei_content=zw_content,
-        dual_content=dual_content,
+        bz1=bz_sub1, bz2=bz_sub2, bz3=bz_sub3, bz4=bz_sub4,
+        zw1=zw_sub1, zw2=zw_sub2, zw3=zw_sub3, zw4=zw_sub4, zw5=zw_sub5,
+        dual=dual_content,
     )
     with open(out, 'w', encoding='utf-8') as f:
         f.write(html)
