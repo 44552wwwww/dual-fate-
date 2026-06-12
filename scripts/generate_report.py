@@ -769,13 +769,13 @@ body{{background:var(--bg);color:var(--t);font-family:'Segoe UI','Noto Sans SC',
 </div>
 
 <div id="tb-bazi" class="panel on"><div class="wrap">
-<div class="hdr"><h1>八字命盘 · 子平术</h1><div class="sub">Ba Zi · Four Pillars of Destiny</div></div>
+<div class="hdr"><h1>八字命盘 · 子平术</h1><div class="sub">Ba Zi · Four Pillars of Destiny</div><div class="meta" style="font-size:1.1em;color:var(--g);font-weight:700">{bz_date} · {bz_sex}命 · {bz_year}年 · 日主{bz_rigan}({bz_riwx}) · {bz_sq}</div></div>
 <div class="sub-tabs"><button class="sub-btn on" onclick="swSub('bazi',0,event)">💬 白话总结</button><button class="sub-btn" onclick="swSub('bazi',1,event)">📊 排盘数据</button><button class="sub-btn" onclick="swSub('bazi',2,event)">📋 命理分析</button><button class="sub-btn" onclick="swSub('bazi',3,event)">⏳ 大运走势</button></div>
 <div class="sub-panel on">{bz1}</div><div class="sub-panel">{bz2}</div><div class="sub-panel">{bz3}</div><div class="sub-panel">{bz4}</div>
 <div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
 
 <div id="tb-ziwei" class="panel"><div class="wrap">
-<div class="hdr"><h1>紫微斗数 · 星盘命理</h1><div class="sub">Zi Wei Dou Shu · Star Chart</div></div>
+<div class="hdr"><h1>紫微斗数 · 星盘命理</h1><div class="sub">Zi Wei Dou Shu · Star Chart</div><div class="meta" style="font-size:1.1em;color:var(--g);font-weight:700">{zw_date} · {zw_sex}命 · {zw_year}年 · 命宫{zw_ming} · 身宫{zw_shen} · {zw_wxj}</div></div>
 <div class="sub-tabs"><button class="sub-btn on" onclick="swSub('ziwei',0,event)">💬 白话总结</button><button class="sub-btn" onclick="swSub('ziwei',1,event)">🌟 星盘总览</button><button class="sub-btn" onclick="swSub('ziwei',2,event)">📋 命理分析</button><button class="sub-btn" onclick="swSub('ziwei',3,event)">🔄 四化飞星</button><button class="sub-btn" onclick="swSub('ziwei',4,event)">⏳ 大限走势</button></div>
 <div class="sub-panel on">{zw1}</div><div class="sub-panel">{zw2}</div><div class="sub-panel">{zw3}</div><div class="sub-panel">{zw4}</div><div class="sub-panel">{zw5}</div>
 <div class="footer">⚠ 命理仅为传统民俗文化参考</div></div></div>
@@ -1131,20 +1131,54 @@ def gen_ziwei_html_v2(zw):
 
     # Sub-tab 4: 四化飞星
     sh = zw['四化']; hua_cls = {'化禄':('lu','🟢'),'化权':('quan','🟣'),'化科':('ke','🔵'),'化忌':('ji','🔴')}
+    hua_desc = {
+        '化禄': '代表福气、财富、优势所在。禄入哪宫，哪宫相关事务就顺利、有收获。是天生"得来不费功夫"的地方。',
+        '化权': '代表权力、掌控、发力方向。权入哪宫，哪宫就需要你去争取、去主导。是"自己说了算"的领域。',
+        '化科': '代表名声、学识、贵人。科入哪宫，哪宫就容易出名、被认可、有贵人相助。是"光环加身"的地方。',
+        '化忌': '代表执着、阻塞、人生课题。忌入哪宫，哪宫就是你这辈子绕不开的功课。非灾祸，而是"必须面对"。',
+    }
     sihua = '<div class="sh-ban">'
     for hn, sn in sh.items():
         cls, em = hua_cls.get(hn,('',''))
         gn = next((g['宫名'] for g in gongs if any(s['化星']==hn for s in g['四化'])), '?')
         sihua += f'<div class="sh-c sh-{cls}"><div class="sh-l">{em} {hn}</div><div>{sn}</div><div class="dim" style="font-size:.7em">在{gn}</div></div>'
-    sihua += '</div><p style="color:#888;font-size:.85em;margin-top:12px">生年干决定四化：化禄为优势所在，化权为发力方向，化科为名声所在，化忌为人生课题。</p>'
+    sihua += '</div>'
+    sihua += '<p style="color:#888;font-size:.85em;margin-top:12px">生年干决定四化——化禄为优势，化权为发力方向，化科为名声，化忌为人生课题。</p>'
+    # Detailed analysis for each sihua
+    for hn, sn in sh.items():
+        cls, em = hua_cls.get(hn,('',''))
+        gn = next((g['宫名'] for g in gongs if any(s['化星']==hn for s in g['四化'])), '?')
+        g = next((g for g in gongs if g['宫名']==gn), None)
+        g_stars = ', '.join(s['星名'] for s in g['主星']) if g and g['主星'] else '空宫'
+        g_aux = ', '.join(s['星名'] for s in g['辅星']) if g and g['辅星'] else '无'
+        desc = hua_desc.get(hn, '')
+        extra = ''
+        if hn == '化禄': extra = f'禄照{gn}——{gn}相关事务是你天生的优势领域。'
+        elif hn == '化权': extra = f'权照{gn}——{gn}是你需要主动掌控的方向。'
+        elif hn == '化科': extra = f'科照{gn}——{gn}让你容易被看见、被认可。'
+        elif hn == '化忌': extra = f'忌入{gn}——{gn}是你此生的修炼场，不是惩罚是成长。'
+        sihua += f'<div style="padding:12px 0;border-bottom:1px solid var(--bd)"><b style="color:var(--{"gr" if "禄" in hn else "p" if "权" in hn else "b" if "科" in hn else "r"})">{em} {hn} · {sn} 在 {gn}（{g["干支"] if g else ""}）</b><br><span style="color:#888;font-size:.85em">{desc}<br>{extra} 宫内星曜：{g_stars}。辅星：{g_aux}。</span></div>'
     sub4 = sihua
 
     # Sub-tab 5: 大限走势
-    dx = f'<p style="color:#888;margin-bottom:10px"><b>{zw["大限"]["排法"]}</b></p>'
+    dx = f'<p style="color:#888;margin-bottom:10px"><b>{zw["大限"]["排法"]}</b>——每个大限主十年运势，宫位代表该阶段的人生重心</p>'
     for d in zw['大限']['大限列表']:
         g = next((g for g in gongs if g['宫名']==d['宫位']), None)
         stars = ', '.join(s['星名'] for s in g['主星']) if g and g['主星'] else '空宫'
-        dx += f'<div style="padding:8px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.8"><b style="color:var(--g)">{d["年龄段"]}</b> · {d["宫位"]}({d["地支"]}) —— 宫内：{stars}</div>'
+        miao_info = ', '.join(f'{s["星名"]}({s["庙旺"]})' for s in g['主星']) if g and g['主星'] else '无主星'
+        aux_good = sum(1 for s in g['辅星'] if s['类型']=='吉') if g else 0
+        aux_bad = sum(1 for s in g['辅星'] if s['类型']=='煞') if g else 0
+        si_list = ', '.join(s['化星'] for s in g['四化']) if g and g['四化'] else '无'
+        # Analysis
+        status = '吉运' if (aux_good>=2 and aux_bad==0) else ('需注意' if aux_bad>=2 else '平运')
+        detail = f'此十年重心在<b>{d["宫位"]}</b>（代表{d["宫位"]}相关事务凸显）。宫内星曜：{miao_info}。吉星{aux_good}颗，煞星{aux_bad}颗。四化：{si_list}。'
+        if '命宫' in d['宫位']: detail += ' <b>命宫大限为核心人生阶段</b>，自我认知、重大转折多在此期。'
+        elif '夫妻' in d['宫位']: detail += ' 婚姻感情是这十年的重点课题。'
+        elif '财帛' in d['宫位']: detail += ' 财运和收入模式在此期定型。'
+        elif '官禄' in d['宫位']: detail += ' 事业发展、职业选择的关键期。'
+        elif '子女' in d['宫位']: detail += ' 子女、创作、投资相关事务活跃。'
+        elif '田宅' in d['宫位']: detail += ' 房产、家庭环境变化较大。'
+        dx += f'<div style="padding:10px 0;border-bottom:1px solid var(--bd);color:#bbb;line-height:1.9"><b style="color:var(--g)">{d["年龄段"]}</b> · {d["宫位"]}({d["地支"]}) · <span style="color:{"var(--gr)" if status=="吉运" else "var(--r)" if status=="需注意" else "#888"}">{status}</span><br>{detail}</div>'
     sub5 = dx
 
     return (sub1, sub2, sub3, sub4, sub5)
@@ -1237,11 +1271,21 @@ def generate(y, m, d, h, sex):
     zw_sub1, zw_sub2, zw_sub3, zw_sub4, zw_sub5 = gen_ziwei_html_v2(zw)
     dual_content = gen_dual_panel(bz, zw)
 
+    bz_date = bz['输入']['公历']; bz_sex = bz['输入']['性别']
+    bz_year = bz['四柱']['年柱']['干支']; bz_rigan = bz['日主']['天干']
+    bz_riwx = bz['日主']['五行']; bz_sq = bz['用神分析']['身强身弱']
+    zw_date = zw['输入']['公历']; zw_sex = zw['输入']['性别']
+    zw_year = zw['年干支']; zw_ming = zw['命宫']; zw_shen = zw['身宫']; zw_wxj = zw['五行局']
+
     html = HTML_V2.format(
         date=f'{y}.{m}.{d}',
         bz1=bz_sub1, bz2=bz_sub2, bz3=bz_sub3, bz4=bz_sub4,
         zw1=zw_sub1, zw2=zw_sub2, zw3=zw_sub3, zw4=zw_sub4, zw5=zw_sub5,
         dual=dual_content,
+        bz_date=bz_date, bz_sex=bz_sex, bz_year=bz_year,
+        bz_rigan=bz_rigan, bz_riwx=bz_riwx, bz_sq=bz_sq,
+        zw_date=zw_date, zw_sex=zw_sex, zw_year=zw_year,
+        zw_ming=zw_ming, zw_shen=zw_shen, zw_wxj=zw_wxj,
     )
     with open(out, 'w', encoding='utf-8') as f:
         f.write(html)
